@@ -13,7 +13,7 @@ passport.use(
 
     async (_accessToken, _refreshToken, profile, done) => {
       try {
-        /* ───────────────── Google Data ───────────────── */
+
 
         const email = profile.emails?.[0]?.value;
 

@@ -39,14 +39,43 @@ export default function LoginPage() {
         <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(#1E1E2E22 1px,transparent 1px),linear-gradient(90deg,#1E1E2E22 1px,transparent 1px)", backgroundSize:"48px 48px" }}/>
       </div>
 
+
+
+
+
       <div className="fade-up" style={{ width:"100%", maxWidth:420, position:"relative", zIndex:1 }}>
-        {/* Logo */}
-        <div style={{ textAlign:"center", marginBottom:"2rem" }}>
-          <Link to="/" style={{ textDecoration:"none", display:"inline-flex", alignItems:"center", gap:".5rem" }}>
-            <div style={{ width:40, height:40, borderRadius:11, background:"linear-gradient(135deg,#1A1A28,#252535)", border:"1px solid #C9973A44", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"Sora,sans-serif", fontSize:"1.1rem", fontWeight:700, color:"#C9973A" }}>ع</div>
-            <span style={{ fontFamily:"Sora,sans-serif", fontSize:"1rem", fontWeight:700, color:"#F0EDE6" }}>ArabBrand <span style={{color:"#C9973A"}}>Studio</span></span>
-          </Link>
-        </div>
+
+
+
+{/* Logo */}
+<div style={{ textAlign:"center", marginBottom:"2rem" }}>
+  <Link to="/" style={{ textDecoration:"none", display:"inline-flex", alignItems:"center", gap:"10px" }}>
+    <svg width="28" height="28" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="17,2 30,9 30,25 17,32 4,25 4,9" fill="url(#loginHex)" />
+      <text x="17" y="21" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fontWeight="800" fill="#0A0800">AB</text>
+      <defs>
+        <linearGradient id="loginHex" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#F0C96B"/>
+          <stop offset="100%" stopColor="#C9973A"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <span style={{
+      fontFamily: "Sora, sans-serif",
+      fontSize: "15px",
+      fontWeight: 800,
+      letterSpacing: "0.5px",
+      background: "linear-gradient(90deg,#F0C96B,#C9973A)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+    }}>ArabBrand</span>
+  </Link>
+</div>
+
+
+
+
+
 
         {/* Card */}
         <div style={{ background:"#0E0E1A", border:"1px solid #1E1E2E", borderRadius:22, padding:"2.25rem", boxShadow:"0 24px 80px rgba(0,0,0,.4)" }}>

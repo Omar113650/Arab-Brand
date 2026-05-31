@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const isLanding = location.pathname === "/";
 
@@ -26,21 +25,32 @@ export default function Navbar() {
       backdropFilter: scrolled ? "blur(16px)" : "none",
       transition: "all .35s ease",
     }}>
-      {/* Logo */}
-      <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: ".625rem" }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 9,
-          background: "linear-gradient(135deg,#1A1A28,#252535)",
-          border: "1px solid #C9973A44",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: "Sora,sans-serif", fontSize: "1rem", fontWeight: 700, color: "#C9973A",
-        }}>ع</div>
-        <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".95rem", fontWeight: 700, color: "#F0EDE6" }}>
-          ArabBrand <span style={{ color: "#C9973A" }}>Studio</span>
-        </span>
-      </Link>
+{/* ── Logo ── */}
+<Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
+  {/* Hexagon icon */}
+  <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="17,2 30,9 30,25 17,32 4,25 4,9" fill="url(#hexG)" />
+    <text x="17" y="21" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fontWeight="800" fill="#0A0800">AB</text>
+    <defs>
+      <linearGradient id="hexG" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#F0C96B"/>
+        <stop offset="100%" stopColor="#C9973A"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  {/* Brand name as plain HTML text */}
+  <span style={{
+    fontFamily: "Sora, sans-serif",
+    fontSize: "15px",
+    fontWeight: 800,
+    letterSpacing: "0.5px",
+    background: "linear-gradient(90deg,#F0C96B,#C9973A)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  }}>ArabBrand</span>
+</Link>
 
-      {/* Desktop Links */}
+      {/* ── Desktop Links ── */}
       {isLanding && (
         <div style={{ display: "flex", alignItems: "center", gap: "1.75rem" }}>
           {[["#features","المميزات"],["#pricing","الأسعار"],["#how","كيف يعمل"]].map(([href,label]) => (
@@ -55,7 +65,7 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Auth Buttons */}
+      {/* ── Auth Buttons ── */}
       <div style={{ display: "flex", alignItems: "center", gap: ".625rem" }}>
         <Link to="/login" style={{
           padding: ".45rem 1.1rem", borderRadius: 10,
@@ -80,6 +90,7 @@ export default function Navbar() {
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#C9973A"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}
         >ابدأ مجاناً</Link>
       </div>
+
     </nav>
   );
 }

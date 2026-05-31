@@ -8,12 +8,12 @@ export const sessionMiddleware = session({
   store: MongoStore.create({
     mongoUrl:    process.env.MONGO_URI!,
     collectionName: "sessions",
-    ttl:         7 * 24 * 60 * 60, // 7 أيام
+    ttl:         7 * 24 * 60 * 60, 
   }),
   cookie: {
     httpOnly: true,
     secure:   process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge:   7 * 24 * 60 * 60 * 1000, // 7 أيام
+    maxAge:   7 * 24 * 60 * 60 * 1000, 
   },
 });

@@ -9,14 +9,14 @@ import {
 
 const router = Router();
 
-/* ───────────────── Local Auth ───────────────── */
+
 
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/me", getMe);
 
-/* ───────────────── Google Auth ───────────────── */
+
 
 router.get(
   "/google",
@@ -34,7 +34,7 @@ router.get(
   }),
   async (req, res) => {
     try {
-      // المستخدم اتسجل دخوله
+
       return res.redirect("http://localhost:5173/dashboard");
     } catch (error) {
       console.error("Google Callback Error:", error);
