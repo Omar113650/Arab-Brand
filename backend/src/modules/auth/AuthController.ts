@@ -12,11 +12,11 @@ declare module "express-session" {
   }
 }
 
-/* ────────────────────────────────────────────
+/* 
    @desc    Register
    @route   POST /api/auth/register
    @access  Public
-──────────────────────────────────────────── */
+ */
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const { fullName, email, password } = req.body;
 
@@ -62,11 +62,11 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-/* ────────────────────────────────────────────
+/* 
    @desc    Login
    @route   POST /api/auth/login
    @access  Public
-──────────────────────────────────────────── */
+ */
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -105,11 +105,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-/* ────────────────────────────────────────────
+/* 
    @desc    Logout
    @route   POST /api/auth/logout
    @access  Private
-──────────────────────────────────────────── */
+ */
 export const logout = asyncHandler(async (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) {
@@ -121,11 +121,11 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-/* ────────────────────────────────────────────
+/* 
    @desc    Get current user
    @route   GET /api/auth/me
    @access  Private
-──────────────────────────────────────────── */
+ */
 export const getMe = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(req.session.userId).select("-password");
   if (!user) {

@@ -87,10 +87,8 @@ const userSchema = new Schema<IUser>(
   },
   {
     timestamps: true,
-  }
+  },
 );
-
-/* ───────────────── Remove Sensitive Data ───────────────── */
 
 userSchema.methods.toJSON = function () {
   const userObject = this.toObject();

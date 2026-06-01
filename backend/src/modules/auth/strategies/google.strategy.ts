@@ -13,24 +13,15 @@ passport.use(
 
     async (_accessToken, _refreshToken, profile, done) => {
       try {
-
-
         const email = profile.emails?.[0]?.value;
 
         const avatar = profile.photos?.[0]?.value;
 
         if (!email) {
-          return done(
-            new Error("Google account has no email"),
-            false
-          );
+          return done(new Error("Google account has no email"), false);
         }
 
-        /* ───────────────── Find Existing User ───────────────── */
-
         let user = await User.findOne({ email });
-
-        /* ───────────────── Existing User ───────────────── */
 
         if (user) {
           // لو الحساب معمول بإيميل/باسورد عادي
@@ -48,8 +39,6 @@ passport.use(
 
           return done(null, user);
         }
-
-        /* ───────────────── Create New User ───────────────── */
 
         user = await User.create({
           fullName: profile.displayName,
@@ -77,17 +66,13 @@ passport.use(
 
         return done(error as Error, false);
       }
-    }
-  )
+    },
+  ),
 );
-
-/* ───────────────── Serialize User ───────────────── */
 
 passport.serializeUser((user: any, done) => {
   done(null, user._id.toString());
 });
-
-/* ───────────────── Deserialize User ───────────────── */
 
 passport.deserializeUser(async (id: string, done) => {
   try {
