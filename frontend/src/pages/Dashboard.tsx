@@ -67,6 +67,42 @@ export default function Dashboard() {
     return true;
   };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -75,6 +111,7 @@ export default function Dashboard() {
           navigate("/login");
           return;
         }
+
         const userData = await userRes.json();
         setUser(userData.user);
         const projRes = await fetch("/api/projects");
@@ -278,6 +315,47 @@ export default function Dashboard() {
       console.error(e);
     }
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
 
   if (loading)
     return (
@@ -3766,7 +3844,6 @@ function CompetitorsTab({
           </div>
         </div>
       </div>
-
       {competitors.competitors?.length > 0 && (
         <div className="card">
           <div className="clabel">المنافسون في السوق</div>
@@ -3907,7 +3984,6 @@ function CompetitorsTab({
           </div>
         </div>
       )}
-
       {competitors.gaps?.length > 0 && (
         <div className="card">
           <div className="clabel">فرص في السوق غير مستغلة</div>
@@ -3946,7 +4022,6 @@ function CompetitorsTab({
           </div>
         </div>
       )}
-
       {competitors.differentiators?.length > 0 && (
         <div className="card">
           <div className="clabel">ما يجعل براندك مختلفاً</div>
@@ -3981,7 +4056,6 @@ function CompetitorsTab({
           </div>
         </div>
       )}
-
       {competitors.searchKeywords?.length > 0 && (
         <div className="card">
           <div className="clabel">كلمات البحث المقترحة لـ SEO</div>
@@ -4005,7 +4079,7 @@ function CompetitorsTab({
           </div>
         </div>
       )}
-
+     
       {competitors.recommendation && (
         <div className="card" style={{ borderColor: `${primary}33` }}>
           <div className="clabel" style={{ color: primary }}>
@@ -4116,124 +4190,7 @@ function CompetitorsTab({
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // زيادات  ف out of scope
-
-
 
 // import { useNavigate, Link } from "react-router-dom";
 // import { useState, useEffect, useRef } from "react";

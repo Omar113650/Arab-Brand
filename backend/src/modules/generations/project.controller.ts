@@ -43,29 +43,13 @@ export const createProject = asyncHandler(
         await Result.create({
           userId,
           projectId: project._id,
-
-          // الهوية - بدون logo جوا عشان logo field منفصل
           brandIdentity: brandKit.brand,
-
-          // الشعار كـ string مباشرة
           logo: brandKit.logo || "",
-
-          // السوشيال ميديا
           socialMedia: brandKit.social || {},
-
-          // Landing Page
           landingPage: brandKit.landing || {},
-
-          // البروشور HTML القديم (للتوافق)
           brochure: {},
-
-          // محتوى البروشور المخصص الجديد ← مهم
           brochureContent: brandKit.brochureContent || {},
-
-          // تحليل المنافسين ← مهم
           competitors: brandKit.competitors || {},
-
-          // الدرجات
           scores: brandKit.brand?.score || {},
         });
 
@@ -76,9 +60,24 @@ export const createProject = asyncHandler(
         await User.findByIdAndUpdate(userId, { $inc: { credits: -1 } });
 
         console.log("✅ Project completed:", project._id);
-      } catch (err) {
-        console.error("❌ AI Generation failed for project:", project._id, err);
+      } catch (err: any) {
+        // ── تسجيل تفصيلي للـ error ──
+        console.error("❌ AI Generation failed for project:", project._id);
+        console.error("❌ Error name:", err?.name);
+        console.error("❌ Error message:", err?.message);
+        console.error("❌ Error stack:", err?.stack);
+
+        // لو الـ error جاي من Groq rate limit
+        if (err?.status === 429 || err?.code === "rate_limit_exceeded") {
+          console.error("❌ Cause: Groq rate limit exceeded");
+        }
+        // لو الـ error جاي من HF / FLUX
+        if (err?.message?.includes("HF") || err?.message?.includes("FLUX") || err?.message?.includes("fal")) {
+          console.error("❌ Cause: Hugging Face / fal-ai error");
+        }
+
         project.status = "failed";
+        project.failureReason = err?.message || "Unknown AI error";
         await project.save();
       }
     };
@@ -112,6 +111,16 @@ export const getProjectStatus = asyncHandler(
       return;
     }
 
+    // لو فشل، رجّع سبب الفشل للـ frontend
+    if (project.status === "failed") {
+      res.status(422).json({
+        status: "failed",
+        message: "فشل توليد هذا البراند",
+        reason: project.failureReason || "خطأ غير معروف - راجع الـ server logs",
+      });
+      return;
+    }
+
     res.status(200).json({ project });
   },
 );
@@ -130,7 +139,6 @@ export const deleteProject = asyncHandler(
       return;
     }
 
-    // احذف الـ result كمان
     await Result.deleteOne({ projectId: req.params.id, userId });
 
     res.status(200).json({ message: "تم حذف المشروع" });
@@ -155,7 +163,10 @@ export const getProjectResult = asyncHandler(
     }
 
     if (project.status === "failed") {
-      res.status(422).json({ message: "فشل توليد هذا البراند" });
+      res.status(422).json({
+        message: "فشل توليد هذا البراند",
+        reason: project.failureReason || "خطأ غير معروف - راجع الـ server logs",
+      });
       return;
     }
 
@@ -175,12 +186,9 @@ export const getProjectResult = asyncHandler(
 
     if (needsCompetitors || needsBrochure) {
       try {
-        const { generateFullBrandKit } = await import("./ai.service");
-
         const updates: Record<string, any> = {};
 
         if (needsCompetitors) {
-          // استخدم callAI مباشرة للمنافسين فقط
           const { generateCompetitorsOnly } = await import("./ai.service");
           const competitors = await generateCompetitorsOnly({
             idea: project.idea,
@@ -215,9 +223,8 @@ export const getProjectResult = asyncHandler(
           await Result.findByIdAndUpdate(result._id, updates);
           Object.assign(result, updates);
         }
-      } catch (err) {
-        console.error("Background enrichment failed:", err);
-        // مش بنفشّل الـ request لو الـ enrichment فشل
+      } catch (err: any) {
+        console.error("❌ Background enrichment failed:", err?.message);
       }
     }
 
@@ -282,16 +289,6 @@ export const generateExtraSocial = asyncHandler(
     });
   },
 );
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -15,7 +15,7 @@ import {
 
 const router = Router();
 
-router.use(protect); 
+// router.use(protect); 
 
 router.post("/", createProject);
 router.get("/",  getProjects);
@@ -27,7 +27,7 @@ router.delete("/:id", deleteProject);
 
 // router.post("/:id/social/generate",        generateExtraSocial);
 // router.post("/:id/generate/launch-plan",   generateLaunchPlanEndpoint);
-// router.post("/:id/generate/buyer-persona", generateBuyerPersonaEndpoint);
+// router.post("/:id/generate/buyer-persona", generateBuyerPersonئaEndpoint);
 // router.post("/:id/generate/ad-scripts",    generateAdScriptsEndpoint);
 // router.post("/:id/generate/email-campaign",generateEmailCampaignEndpoint);
 

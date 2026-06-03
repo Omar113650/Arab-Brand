@@ -5,25 +5,29 @@ import {
   login,
   logout,
   getMe,
+  resetPassword,
+  forgetPassword,
+  verifyOtp,
+  resendOtp,
 } from "../modules/auth/AuthController";
 
 const router = Router();
 
-
-
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
+router.post("/verify-otp", verifyOtp);
+router.post("/forget-password", forgetPassword);
+router.post("/reset-password", resetPassword);
+router.post("/resend-otp", resendOtp);
 router.get("/me", getMe);
-
-
 
 router.get(
   "/google",
   passport.authenticate("google", {
     scope: ["profile", "email"],
     session: true,
-  })
+  }),
 );
 
 router.get(
@@ -34,14 +38,12 @@ router.get(
   }),
   async (req, res) => {
     try {
-
       return res.redirect("http://localhost:5173/dashboard");
     } catch (error) {
       console.error("Google Callback Error:", error);
 
       return res.redirect("http://localhost:5173/login");
     }
-  }
+  },
 );
-
 export default router;

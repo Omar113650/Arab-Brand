@@ -5,11 +5,12 @@ export const protect = (
   res: Response,
   next: NextFunction,
 ): void => {
-  if (!req.session || !req.session.userId) {
-    res
-      .status(401)
-      .json({ message: "غير مصرح بالدخول، يرجى تسجيل الدخول أولاً" });
-    return;
+  if (!req.session?.userId) {
+    res.status(401).json({
+      message: "غير مصرح بالدخول، يرجى تسجيل الدخول أولاً",
+    });
+    return; // ✅ منع تنفيذ next() بعد الـ response
   }
+
   next();
 };

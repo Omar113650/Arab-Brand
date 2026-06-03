@@ -26,7 +26,7 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) return setErr(data.message || "خطأ في إنشاء الحساب");
-      navigate("/dashboard");
+      navigate("/verify-otp", { state: { email } });
     } catch {
       setErr("خطأ في الاتصال، حاول مرة أخرى");
     } finally {
@@ -413,3 +413,56 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

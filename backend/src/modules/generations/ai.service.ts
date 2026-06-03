@@ -1,9 +1,12 @@
 import OpenAI from "openai";
+import { InferenceClient } from "@huggingface/inference";
 
 const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: "https://api.groq.com/openai/v1",
 });
+
+const hfClient = new InferenceClient(process.env.HF_TOKEN);
 
 // ─────────────────────────────────────────────
 // SYSTEM PROMPTS
@@ -44,6 +47,18 @@ const SYS_BRAND = `أنت خبير Brand Strategy للسوق العربي متخ
 }
 مهم جداً: كل شيء مخصص للمشروع المحدد، والأسماء يجب أن تكون أسماء براند حقيقية مبتكرة.`;
 
+const SYS_LOGO_PROMPT = `You are a world-class logo prompt engineer for AI image generators. Your job is to write a highly detailed, professional visual prompt to create a luxury, corporate logo.
+
+Output ONLY the prompt text in English. No JSON, no markdown, no explanation.
+
+RULES FOR THE PROMPT:
+1. Start with: "A high-end professional corporate logo design for [Brand Name], representing [Concept]."
+2. Visual Style: Masterpiece minimalist, ultra-clean vector style, flat design, sharp golden ratio geometry, perfectly centered composition, symmetric layout.
+3. Color Palette: Use the exact colors provided ([Primary] and [Secondary]) on a clean, solid, plain flat background (no gradients, no textures).
+4. Artistic Quality: "Designed by a top branding agency, sleek modern aesthetics, fine lines, sharp edges, Adobe Illustrator render, 8k resolution, trending on Dribbble."
+5. CRITICAL - NO TEXT ALLOWED: The logo must be ICON ONLY. Absolutely NO letters, NO words, NO typography, NO text elements inside the image.
+6. Abstract Symbolism: Focus on high-end abstract or symbolic shapes that seamlessly reflect the brand's industry and core value. Keep it under 100 words.`;
+
 const SYS_LOGO = `You are a professional SVG logo designer specializing in Arabic luxury brands. Output ONLY raw SVG code starting with <svg. No markdown, no explanation, no fences.
 
 CRITICAL RULES:
@@ -60,16 +75,6 @@ DESIGN REQUIREMENTS - create a BEAUTIFUL, PROFESSIONAL logo:
 5. Optional: tagline or decorative line under the name
 6. Use opacity and layering for depth (opacity="0.15", opacity="0.4", etc.)
 7. Minimum 8-12 SVG elements for visual richness
-
-EXAMPLE structure:
-<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-  <rect width="300" height="300" fill="[secondary]"/>
-  [decorative background shapes with low opacity]
-  [main geometric symbol]
-  [inner symbol details]
-  [brand name text]
-  [decorative line or tagline]
-</svg>
 
 Make it look like a real premium brand logo, not a simple placeholder.`;
 
@@ -203,10 +208,6 @@ const SYS_BROCHURE = `أنت مصمم بروشورات احترافية للسو
 }`;
 
 // ─────────────────────────────────────────────
-// AI CALLER
-// ─────────────────────────────────────────────
-
-// ─────────────────────────────────────────────
 // AI CALLER with retry on rate limit
 // ─────────────────────────────────────────────
 
@@ -222,7 +223,7 @@ async function callAI(
       const res = await client.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         temperature: 0.75,
-        max_tokens: 1800,
+        max_tokens: 4000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMsg },
@@ -233,11 +234,10 @@ async function callAI(
       const isRateLimit =
         err?.status === 429 || err?.code === "rate_limit_exceeded";
       if (isRateLimit && attempt < retries - 1) {
-        // استخرج وقت الانتظار من الـ header أو استخدم 15 ثانية افتراضي
-        const retryAfter = parseInt(err?.headers?.["retry-after"] || "15", 10);
-        const waitMs = (retryAfter + 2) * 1000;
+        const retryAfter = parseInt(err?.headers?.["retry-after"] || "10", 10);
+        const waitMs = (retryAfter + 1) * 1000;
         console.log(
-          `Rate limit hit, waiting ${retryAfter + 2}s before retry ${attempt + 1}/${retries - 1}...`,
+          `Rate limit hit, waiting ${retryAfter + 1}s before retry ${attempt + 1}/${retries - 1}...`,
         );
         await sleep(waitMs);
         continue;
@@ -249,11 +249,77 @@ async function callAI(
 }
 
 // ─────────────────────────────────────────────
+// LOGO GENERATOR - FLUX.1-dev via Hugging Face
+// ─────────────────────────────────────────────
+
+async function generateLogoWithFlux(
+  prompt: string,
+  retries = 2,
+): Promise<string | null> {
+  if (!process.env.HF_TOKEN) {
+    console.warn("HF_TOKEN not set, falling back to SVG logo");
+    return null;
+  }
+
+  const safePrompt = prompt
+    .replace(/[^\x00-\x7F]/g, "")
+    .slice(0, 500)
+    .trim();
+
+  if (!safePrompt) {
+    console.error("Logo prompt is empty after sanitization");
+    return null;
+  }
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      console.log(
+        `Generating high-quality logo with FLUX.1-dev (attempt ${attempt + 1}/${retries})...`,
+      );
+
+      const image = await hfClient.textToImage({
+        model: "black-forest-labs/FLUX.1-dev",
+        inputs: safePrompt,
+        parameters: { 
+          num_inference_steps: 28, 
+          guidance_scale: 3.5      
+        },
+      });
+
+      const imageBlob = (image as any) instanceof Blob ? image : await fetch(image as string).then(r => r.blob());
+      const arrayBuffer = await (imageBlob as Blob).arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      if (buffer.length < 1000) {
+        console.error("FLUX returned too small image, likely an error response");
+        if (attempt < retries - 1) {
+          await sleep(3000);
+          continue;
+        }
+        return null;
+      }
+
+      const base64 = buffer.toString("base64");
+      return `data:image/png;base64,${base64}`;
+    } catch (err: any) {
+      console.error(`FLUX Pro logo error (attempt ${attempt + 1}):`, err?.message);
+      if (attempt < retries - 1) {
+        await sleep(4000);
+        continue;
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────
 // PARSERS
 // ─────────────────────────────────────────────
 
 function parseJSON(raw: string): any {
   try {
+    if (!raw) return null;
     const clean = raw
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
@@ -277,16 +343,12 @@ function parseSVG(raw: string): string | null {
   return i >= 0 ? clean.slice(i).trim() : null;
 }
 
-// تنظيف وإصلاح SVG من AI
 function sanitizeSVG(raw: string): string {
   if (!raw || !raw.includes("<svg")) return "";
   let svg = raw.trim();
-
-  // ضيف xmlns لو مش موجود
   if (!svg.includes("xmlns")) {
     svg = svg.replace("<svg", `<svg xmlns="http://www.w3.org/2000/svg"`);
   }
-  // تأكد من viewBox
   if (!svg.includes("viewBox")) {
     svg = svg.replace("<svg", `<svg viewBox="0 0 300 300"`);
   }
@@ -307,7 +369,7 @@ function fallbackSVG(name: string, primary: string, secondary: string): string {
 }
 
 // ─────────────────────────────────────────────
-// TYPES
+// TYPES & INTERFACES
 // ─────────────────────────────────────────────
 
 export interface GenerateParams {
@@ -320,6 +382,7 @@ export interface GenerateParams {
 export interface BrandKitResult {
   brand: any;
   logo: string;
+  logoFormat: "image" | "svg";
   social: any;
   landing: any;
   brochureContent: any;
@@ -327,7 +390,7 @@ export interface BrandKitResult {
 }
 
 // ─────────────────────────────────────────────
-// MAIN GENERATOR
+// MAIN GENERATOR (SOLVED PIPELINE)
 // ─────────────────────────────────────────────
 
 export const generateFullBrandKit = async (
@@ -336,23 +399,11 @@ export const generateFullBrandKit = async (
   const { idea, brandName, style, colors } = params;
 
   const styleMap: Record<string, string> = {
-    modern: "عصري",
-    luxury: "فاخر",
-    youth: "شبابي",
-    minimal: "بسيط",
-    arabic: "تراثي",
-    tech: "تقني",
+    modern: "عصري", luxury: "فاخر", youth: "شبابي", minimal: "بسيط", arabic: "تراثي", tech: "تقني",
   };
 
   const colorMap: Record<string, string> = {
-    gold: "ذهبي",
-    navy: "كحلي",
-    green: "أخضر",
-    red: "أحمر",
-    purple: "بنفسجي",
-    teal: "تيل",
-    black: "أسود",
-    coral: "مرجاني",
+    gold: "ذهبي", navy: "كحلي", green: "أخضر", red: "أحمر", purple: "بنفسجي", teal: "تيل", black: "أسود", coral: "مرجاني",
   };
 
   const styleName = styleMap[style] ?? style;
@@ -364,7 +415,8 @@ ${brandName ? `اسم البراند المحدد: ${brandName}` : "لا يوج�
 ${colNames ? `الألوان المفضلة: ${colNames}` : ""}
 تذكر: كل المخرجات يجب أن تكون مخصصة لهذه الفكرة تحديداً وليست نماذج عامة.`;
 
-  // ── Phase 1: Brand Identity ──
+  // ── Phase 1: Brand Identity (يجب أن تتم أولًا لاستخراج البيانات والالوان المتناسقة) ──
+  console.log("Phase 1: Generating Brand Identity...");
   const brandRaw = await callAI(
     SYS_BRAND,
     base + "\nولّد Brand Kit كامل احترافي ومخصص لهذا المشروع.",
@@ -375,92 +427,64 @@ ${colNames ? `الألوان المفضلة: ${colNames}` : ""}
 
   const primary = brand.colors?.[0]?.hex ?? "#C9973A";
   const secondary = brand.colors?.[1]?.hex ?? "#13131E";
+  const namesList: string[] = (brand.names || []).map((n: any) => typeof n === "string" ? n : n.name);
+  const displayName = brandName || brand.recommendedName || namesList[0] || "Brand";
 
-  // استخرج الأسماء - الصيغة الجديدة (objects) أو القديمة (strings)
-  const namesList: string[] = (brand.names || []).map((n: any) =>
-    typeof n === "string" ? n : n.name,
+  // ── Phase 2: Logo Prompt Construction ──
+  const logoPromptRaw = await callAI(
+    SYS_LOGO_PROMPT,
+    `Brand Name: ${displayName} \nBrand Industry/Idea: ${idea.slice(0, 200)} \nVisual Style: ${styleName} \nPrimary Color: ${primary} \nSecondary Color: ${secondary} \nAccent Color: ${brand.colors?.[2]?.hex || "#FFFFFF"} \nBrand Personality: ${brand.voice?.tone || "professional"} \nWrite a tailored visual logo generation prompt. Important: ICON ONLY, absolutely NO text/letters.`,
   );
-  const displayName =
-    brandName || brand.recommendedName || namesList[0] || "Brand";
+  const logoPrompt = logoPromptRaw.replace(/```[\s\S]*?```/g, "").replace(/^["'`]+|["'`]+$/g, "").replace(/[^\x00-\x7F]/g, "").slice(0, 500).trim();
 
-  // ── Phase 2: Logo ──
+  // ── Phase 3: ALL NEXT STEPS IN PARALLEL (الحل الجذري للتعليق عند 90%) ──
+  console.log("Phase 3: Launching all content tasks in parallel...");
+
+  const [logoRes, socialRaw, landingRaw, brochureRaw, competitorsRaw] = await Promise.all([
+    // تشغيل توليد لوجو الموديل المحترف بالتوازي مع النصوص
+    generateLogoWithFlux(logoPrompt).catch(() => null),
+    
+    // تشغيل السوشيال ميديا
+    callAI(SYS_SOCIAL, `${base}\nالبراند: ${displayName}\nالشعار والرسالة: ${brand.tagline?.ar || ""}\nالقيمة الفريدة: ${brand.strategy?.value || ""}\nالجمهور المستهدف: ${brand.strategy?.audience || ""}\nاصنع محتوى سوشيال مميز ومخصص لهذا البراند.`),
+    
+    // تشغيل اللاندينج بيج
+    callAI(SYS_LANDING, `${base}\nالبراند: ${displayName}\nالشعار: ${brand.tagline?.ar || ""}\nالقيمة الفريدة: ${brand.strategy?.value || ""}\nالجمهور: ${brand.strategy?.audience || ""}\nالتموضع: ${brand.strategy?.positioning || ""}\nاصنع محتوى Landing Page فريد ومخصص جداً لهذا البراند.`),
+    
+    // تشغيل البروشور (مع حماية catch مدمجة)
+    callAI(SYS_BROCHURE, `${base}\nالبراند: ${displayName}\nالشعار: ${brand.tagline?.ar || ""}\nالقيمة الفريدة: ${brand.strategy?.value || ""}\nالجمهور: ${brand.strategy?.audience || ""}\nالرسائل التسويقية: ${(brand.messages || []).join(" | ")}\nاصنع محتوى بروشور احترافي ومخصص لهذا البراند.`).catch(() => ""),
+    
+    // تشغيل تحليل المنافسين والسوق (مع حماية catch مدمجة)
+    callAI(SYS_COMPETITORS, `فكرة المشروع: ${idea}\nالبراند: ${displayName}\nالسوق المستهدف: ${brand.strategy?.audience || ""}\nالتموضع: ${brand.strategy?.positioning || ""}\nحلل السوق والمنافسين لهذا النوع من المشاريع في السوق العربي.`).catch(() => "")
+  ]);
+
+  // ── Processing Logo Output ──
   let logo: string;
-  try {
-    const logoRaw = await callAI(
-      SYS_LOGO,
-      `Brand Name: ${displayName}
-Style: ${styleName}
-Primary Color: ${primary}
-Secondary Color: ${secondary}
-Brand Idea: ${idea.slice(0, 120)}
-Create a unique minimal geometric SVG logo that reflects this brand's identity.`,
-    );
-    const parsed = parseSVG(logoRaw);
-    logo = parsed
-      ? sanitizeSVG(parsed)
-      : fallbackSVG(displayName, primary, secondary);
-  } catch (err) {
-    console.error("Logo error:", err);
-    logo = fallbackSVG(displayName, primary, secondary);
+  let logoFormat: "image" | "svg";
+
+  if (logoRes) {
+    logo = logoRes;
+    logoFormat = "image";
+  } else {
+    // Fallback لـ SVG فوري في حالة الفشل دون انتظار طويل
+    console.log("FLUX Dev skipped or failed, designing an ultra-fast SVG fallback...");
+    const svgRaw = await callAI(SYS_LOGO, `Brand Name: ${displayName}\nStyle: ${styleName}\nPrimary Color: ${primary}\nSecondary Color: ${secondary}\nBrand Idea: ${idea.slice(0, 120)}\nCreate a unique minimal geometric SVG logo that reflects this brand's identity.`);
+    const parsed = parseSVG(svgRaw);
+    logo = parsed ? sanitizeSVG(parsed) : fallbackSVG(displayName, primary, secondary);
+    logoFormat = "svg";
   }
 
-  // ── Phase 3→6: Sequential مع delay عشان نتجنب الـ rate limit ──
-  console.log("Generating social...");
-  const socialRaw = await callAI(
-    SYS_SOCIAL,
-    `${base}
-البراند: ${displayName}
-الشعار والرسالة: ${brand.tagline?.ar || ""}
-القيمة الفريدة: ${brand.strategy?.value || ""}
-الجمهور المستهدف: ${brand.strategy?.audience || ""}
-اصنع محتوى سوشيال مميز ومخصص لهذا البراند.`,
-  );
-  await sleep(3000);
-
-  console.log("Generating landing...");
-  const landingRaw = await callAI(
-    SYS_LANDING,
-    `${base}
-البراند: ${displayName}
-الشعار: ${brand.tagline?.ar || ""}
-القيمة الفريدة: ${brand.strategy?.value || ""}
-الجمهور: ${brand.strategy?.audience || ""}
-التموضع: ${brand.strategy?.positioning || ""}
-اصنع محتوى Landing Page فريد ومخصص جداً لهذا البراند.`,
-  );
-  await sleep(3000);
-
-  console.log("Generating brochure...");
-  const brochureRaw = await callAI(
-    SYS_BROCHURE,
-    `${base}
-البراند: ${displayName}
-الشعار: ${brand.tagline?.ar || ""}
-القيمة الفريدة: ${brand.strategy?.value || ""}
-الجمهور: ${brand.strategy?.audience || ""}
-الرسائل التسويقية: ${(brand.messages || []).join(" | ")}
-اصنع محتوى بروشور احترافي ومخصص لهذا البراند.`,
-  );
-  await sleep(3000);
-
-  console.log("Generating competitors...");
-  const competitorsRaw = await callAI(
-    SYS_COMPETITORS,
-    `فكرة المشروع: ${idea}
-البراند: ${displayName}
-السوق المستهدف: ${brand.strategy?.audience || ""}
-التموضع: ${brand.strategy?.positioning || ""}
-حلل السوق والمنافسين لهذا النوع من المشاريع في السوق العربي.`,
-  );
-
+  // ── JSON Parsings ──
   const social = parseJSON(socialRaw);
   const landing = parseJSON(landingRaw);
   const brochureContent = parseJSON(brochureRaw);
-  const competitors = parseJSON(competitorsRaw);
+  const competitors = parseJSON(competitorsRaw) || {};
+
+  console.log("Brand Kit constructed perfectly without blocking!");
 
   return {
     brand,
     logo,
+    logoFormat,
     social,
     landing,
     brochureContent,
@@ -513,15 +537,8 @@ export const generateExtraSocialContent = async (
 }> => {
   const raw = await callAI(
     SYS_EXTRA_SOCIAL,
-    `فكرة المشروع: ${params.idea}
-البراند: ${params.brandName}
-الشعار: ${params.tagline}
-الجمهور: ${params.audience}
-القيمة الفريدة: ${params.value}
-الأسلوب: ${params.style}
-ولّد محتوى سوشيال جديد وإبداعي مختلف تماماً عن أي منشورات سابقة.`,
+    `فكرة المشروع: ${params.idea}\nالبراند: ${params.brandName}\nالشعار: ${params.tagline}\nالجمهور: ${params.audience}\nالقيمة الفريدة: ${params.value}\nالأسلوب: ${params.style}\nولّد محتوى سوشيال جديد وإبداعي مختلف تماماً عن أي منشورات سابقة.`,
   );
-
   const parsed = parseJSON(raw);
   return {
     postIdeas: parsed?.postIdeas || [],
@@ -532,7 +549,7 @@ export const generateExtraSocialContent = async (
 };
 
 // ─────────────────────────────────────────────
-// STANDALONE: Competitors Only (for old projects)
+// STANDALONE FUNCTIONS
 // ─────────────────────────────────────────────
 
 export interface CompetitorsOnlyParams {
@@ -547,18 +564,10 @@ export const generateCompetitorsOnly = async (
 ): Promise<any | null> => {
   const raw = await callAI(
     SYS_COMPETITORS,
-    `فكرة المشروع: ${params.idea}
-البراند: ${params.brandName}
-السوق المستهدف: ${params.audience}
-التموضع: ${params.positioning}
-حلل السوق والمنافسين لهذا النوع من المشاريع في السوق العربي.`,
+    `فكرة المشروع: ${params.idea}\nالبراند: ${params.brandName}\nالسوق المستهدف: ${params.audience}\nالتموضع: ${params.positioning}\nحلل السوق والمنافسين لهذا النوع من المشاريع في السوق العربي.`,
   );
   return parseJSON(raw);
 };
-
-// ─────────────────────────────────────────────
-// STANDALONE: Brochure Content Only (for old projects)
-// ─────────────────────────────────────────────
 
 export interface BrochureOnlyParams {
   idea: string;
@@ -575,14 +584,7 @@ export const generateBrochureOnly = async (
 ): Promise<any | null> => {
   const raw = await callAI(
     SYS_BROCHURE,
-    `فكرة المشروع بالتفصيل: ${params.idea}
-اسم البراند: ${params.brandName}
-الشعار: ${params.tagline}
-القيمة الفريدة: ${params.value}
-الجمهور: ${params.audience}
-الرسائل التسويقية: ${params.messages.join(" | ")}
-الأسلوب البصري: ${params.style}
-اصنع محتوى بروشور احترافي ومخصص لهذا البراند.`,
+    `فكرة المشروع بالتفصيل: ${params.idea}\nاسم البراند: ${params.brandName}\nالشعار: ${params.tagline}\nالقيمة الفريدة: ${params.value}\nالجمهور: ${params.audience}\nالرسائل التسويقية: ${params.messages.join(" | ")}\nالأسلوب البصري: ${params.style}\nاصنع محتوى بروشور احترافي ومخصص لهذا البراند.`,
   );
   return parseJSON(raw);
 };
@@ -609,92 +611,7 @@ export const generateBrochureOnly = async (
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// out of scope 
-
-
+// out of scope
 
 // import OpenAI from "openai";
 

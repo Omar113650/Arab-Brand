@@ -4,8 +4,8 @@
   "main": "src/server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/server.ts",
-    "dev": "nodemon src/server.ts"
+    "dev": "nodemon --exec ts-node src/server.ts",
+  "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +21,7 @@
     "@types/mongoose": "^5.11.96",
     "@types/multer": "^2.1.0",
     "@types/node": "^25.9.1",
+    "@types/nodemailer": "^8.0.0",
     "@types/nodemon": "^1.19.6",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
@@ -30,6 +31,8 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@clerk/express": "^2.1.22",
+    "@huggingface/inference": "^4.13.18",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.0",
@@ -42,10 +45,13 @@
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^8.5.2",
     "express-session": "^1.19.0",
+    "firebase": "^12.14.0",
+    "firebase-admin": "^10.3.0",
     "groq-sdk": "^1.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.2",
     "multer": "^2.1.1",
+    "nodemailer": "^8.0.10",
     "openai": "^6.39.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
