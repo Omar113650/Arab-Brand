@@ -611,6 +611,515 @@ export const generateBrochureOnly = async (
 
 
 
+
+
+
+
+
+
+
+
+
+// import OpenAI from "openai";
+// import { InferenceClient } from "@huggingface/inference";
+ 
+// // عميل Groq لتوليد النصوص (Llama 3)
+// const client = new OpenAI({
+//   apiKey: process.env.GROQ_API_KEY,
+//   baseURL: "https://api.groq.com/openai/v1",
+// });
+ 
+// // عميل OpenAI الحقيقي لتوليد اللوجو (DALL-E 3) - اختياري ولكنه يعطي أفضل نتيجة للوجوهات
+// const openAIRealClient = process.env.OPENAI_API_KEY 
+//   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) 
+//   : null;
+
+// // عميل Hugging Face كبديل لتوليد اللوجو
+// const hfClient = new InferenceClient(process.env.HF_TOKEN);
+ 
+// // ─────────────────────────────────────────────
+// // SYSTEM PROMPTS
+// // ─────────────────────────────────────────────
+ 
+// const SYS_BRAND = `أنت خبير Brand Strategy للسوق العربي متخصص في ابتكار أسماء براند مميزة وفريدة.
+// رد بـ JSON فقط بدون أي نص أو markdown أو code fences.
+ 
+// قواعد صارمة لاختيار الأسماء:
+// - الأسماء يجب أن تكون مبتكرة وفريدة وليست وصفية مباشرة
+// - تجنب تماماً الأسماء مثل "ساعة الفخامة" أو "وقت النجاح" - هذه عبارات وليست أسماء براند
+// - الأسماء الجيدة: قصيرة (1-2 كلمة)، سهلة النطق، لها وقع جميل، تحمل معنى عميق غير مباشر
+// - أمثلة على أسماء براند ناجحة: "نبض"، "زوايا"، "سمت"، "وهج"، "حقبة"، "أصيل"، "فجر"
+// - يمكن استخدام كلمات عربية أصيلة أو مزج إبداعي أو كلمات ذات جرس موسيقي جميل
+ 
+// الشكل المطلوب بالضبط:
+// {
+//   "names": [
+//     { "name": "اسم مبتكر وفريد ١", "reason": "سبب اختياره مرتبط بالمشروع", "meaning": "المعنى أو الإيحاء" },
+//     { "name": "اسم مبتكر وفريد ٢", "reason": "سبب اختياره", "meaning": "المعنى" },
+//     { "name": "اسم مبتكر وفريد ٣", "reason": "سبب اختياره", "meaning": "المعنى" }
+//   ],
+//   "recommendedName": "أفضل الأسماء الثلاثة",
+//   "tagline": { "ar": "شعار قصير وقوي", "en": "short powerful tagline" },
+//   "story": { "ar": "جملتان مخصصتان لهذا البراند", "en": "two specific sentences" },
+//   "strategy": { "positioning": "", "audience": "", "value": "" },
+//   "colors": [
+//     { "name": "Primary", "hex": "#RRGGBB", "role": "primary" },
+//     { "name": "Secondary", "hex": "#RRGGBB", "role": "secondary" },
+//     { "name": "Accent", "hex": "#RRGGBB", "role": "accent" },
+//     { "name": "Background", "hex": "#RRGGBB", "role": "bg" },
+//     { "name": "Text", "hex": "#RRGGBB", "role": "text" }
+//   ],
+//   "typography": { "display": "FontName", "arabic": "خط عربي", "style": "وصف" },
+//   "voice": { "tone": "", "traits": ["", "", ""] },
+//   "messages": ["رسالة مخصصة ١", "رسالة مخصصة ٢", "رسالة مخصصة ٣"],
+//   "score": { "overall": 85, "identity": 88, "marketing": 82, "memory": 90, "arabicFit": 87 }
+// }
+// مهم جداً: كل شيء مخصص للمشروع المحدد، والأسماء يجب أن تكون أسماء براند حقيقية مبتكرة.`;
+ 
+// // تم التعديل لمنع النصوص وجعل اللوجو Vector مسطح احترافي
+// const SYS_LOGO_PROMPT = `You are an expert logo designer. Create a highly detailed prompt for an AI image generator to make a minimalist corporate logo.
+ 
+// Output ONLY the prompt text. NO JSON, NO explanations.
+ 
+// CRITICAL RULES:
+// 1. Start exactly with: "A minimalist, flat vector logo design for a brand, representing [Core Concept]."
+// 2. Style: Flat vector art, crisp edges, minimal geometry, bold shapes, NO shading, NO 3D effects, NO photorealism.
+// 3. Background: Pure solid white or flat color background. 
+// 4. Text: ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WATERMARKS. Icon only.
+// 5. Quality: "Behance winning logo, professional corporate identity, SVG style, clean."
+// Limit to 80 words. Include the colors provided.`;
+ 
+// const SYS_LOGO = `You are a professional SVG logo designer specializing in Arabic luxury brands. Output ONLY raw SVG code starting with <svg. No markdown, no explanation, no fences.
+ 
+// CRITICAL RULES:
+// - viewBox="0 0 300 300" and xmlns="http://www.w3.org/2000/svg" ALWAYS
+// - Use ONLY the provided hex colors
+// - font-family="Arial, sans-serif" for all text
+// - NO external resources, NO images, NO scripts, NO filters with feImage
+ 
+// DESIGN REQUIREMENTS - create a BEAUTIFUL, PROFESSIONAL logo:
+// 1. Background: filled rectangle with secondary color
+// 2. Main symbol: geometric shape that reflects the brand concept (circle, diamond, hexagon, star, etc.)
+// 3. Inner decorative element: smaller shapes, lines, or patterns using primary color
+// 4. Brand name: clear, well-positioned text using primary color
+// 5. Optional: tagline or decorative line under the name
+// 6. Use opacity and layering for depth (opacity="0.15", opacity="0.4", etc.)
+// 7. Minimum 8-12 SVG elements for visual richness
+ 
+// Make it look like a real premium brand logo, not a simple placeholder.`;
+ 
+// const SYS_SOCIAL = `أنت خبير Social Media Marketing للسوق العربي متخصص في بناء استراتيجيات محتوى متكاملة.
+// رد بـ JSON فقط بدون أي نص أو markdown أو code fences.
+// مهم جداً: كل المحتوى مخصص لهذا البراند تحديداً، لا كلام عام أبداً.
+// {
+//   "contentMap": [
+//     { "category": "Lifestyle", "pct": 40, "color": "#C9973A", "desc": "وصف نوع المحتوى", "examples": ["مثال بصري ١", "مثال بصري ٢", "مثال بصري ٣"] },
+//     { "category": "عرض المنتج/الخدمة", "pct": 30, "color": "#60A5FA", "desc": "", "examples": ["", "", ""] },
+//     { "category": "قصص البراند", "pct": 20, "color": "#4ADE80", "desc": "", "examples": ["", "", ""] },
+//     { "category": "عروض وتفاعل", "pct": 10, "color": "#F87171", "desc": "", "examples": ["", ""] }
+//   ],
+//   "postIdeas": [
+//     { "type": "صورة", "platform": "Instagram", "title": "عنوان الفكرة", "visual": "وصف المشهد البصري بالتفصيل", "caption": "نص كامل مع إيموجي", "hashtags": "#tag1 #tag2", "category": "Lifestyle" },
+//     { "type": "فيديو", "platform": "Instagram Reels", "title": "", "visual": "", "caption": "", "hashtags": "", "category": "عرض المنتج" },
+//     { "type": "كاروسيل", "platform": "Instagram", "title": "", "visual": "", "caption": "", "hashtags": "", "category": "قصص البراند" },
+//     { "type": "صورة", "platform": "Instagram", "title": "", "visual": "", "caption": "", "hashtags": "", "category": "عروض وتفاعل" },
+//     { "type": "فيديو", "platform": "Instagram Reels", "title": "", "visual": "", "caption": "", "hashtags": "", "category": "Lifestyle" },
+//     { "type": "صورة", "platform": "Instagram", "title": "", "visual": "", "caption": "", "hashtags": "", "category": "عرض المنتج" }
+//   ],
+//   "videoIdeas": [
+//     { "platform": "TikTok", "duration": "30 ثانية", "hook": "الجملة الافتتاحية الصادمة", "concept": "فكرة الفيديو", "scenes": ["مشهد ١", "مشهد ٢", "مشهد ٣"], "music": "نوع الموسيقى المناسب", "cta": "نداء الإجراء" },
+//     { "platform": "TikTok", "duration": "60 ثانية", "hook": "", "concept": "", "scenes": ["", "", ""], "music": "", "cta": "" },
+//     { "platform": "Instagram Reels", "duration": "15 ثانية", "hook": "", "concept": "", "scenes": ["", ""], "music": "", "cta": "" },
+//     { "platform": "YouTube Shorts", "duration": "45 ثانية", "hook": "", "concept": "", "scenes": ["", "", ""], "music": "", "cta": "" }
+//   ],
+//   "instagram": [
+//     { "caption": "نص جاهز للنشر مع إيموجي", "hashtags": "#tag1 #tag2 #tag3 #tag4 #tag5", "theme": "موضوع المنشور" },
+//     { "caption": "", "hashtags": "", "theme": "" },
+//     { "caption": "", "hashtags": "", "theme": "" }
+//   ],
+//   "twitter": [
+//     { "text": "تغريدة قوية ومميزة" },
+//     { "text": "" },
+//     { "text": "" }
+//   ],
+//   "strategy": {
+//     "bestTimes": "أفضل أوقات النشر",
+//     "frequency": "معدل النشر الأسبوعي",
+//     "pillars": ["عمود ١", "عمود ٢", "عمود ٣"],
+//     "tone": "نبرة المحتوى",
+//     "weeklyPlan": [
+//       { "day": "الأحد", "content": "نوع المحتوى", "platform": "المنصة" },
+//       { "day": "الاثنين", "content": "", "platform": "" }
+//     ]
+//   }
+// }`;
+ 
+// const SYS_LANDING = `أنت مصمم Landing Pages محترف للسوق العربي. مهمتك إنشاء محتوى صفحة هبوط مخصص وفريد لكل براند.
+// قواعد صارمة:
+// - العنوان الرئيسي يجب أن يكون قوياً وخاصاً بهذا البراند فقط
+// - لا تستخدم عبارات عامة مثل "أهلاً بكم" أو "نحن نقدم"
+// - كل feature يجب أن تعكس ميزة حقيقية من المشروع المحدد
+// - شهادة العميل يجب أن تكون مناسبة لطبيعة المشروع
+// رد بـ JSON فقط بدون أي نص أو markdown أو code fences:
+// {
+//   "hero": {
+//     "headline": "عنوان قوي جداً وخاص بهذا البراند - ليس عاماً",
+//     "subheadline": "جملة توضيحية تشرح القيمة الفريدة للمشروع",
+//     "cta": "نص زر محدد وجذاب"
+//   },
+//   "features": [
+//     { "emoji": "🎯", "title": "ميزة حقيقية من المشروع", "desc": "وصف مفصل يعكس طبيعة العمل" },
+//     { "emoji": "⚡", "title": "", "desc": "" },
+//     { "emoji": "✨", "title": "", "desc": "" },
+//     { "emoji": "🚀", "title": "", "desc": "" }
+//   ],
+//   "testimonial": {
+//     "text": "تجربة عميل حقيقية ومقنعة تناسب هذا النوع من المشاريع",
+//     "name": "اسم عربي مناسب",
+//     "role": "وظيفة أو صفة مناسبة للجمهور المستهدف"
+//   },
+//   "stats": [
+//     { "value": "500+", "label": "إحصائية مناسبة للمشروع" },
+//     { "value": "98%", "label": "" },
+//     { "value": "24/7", "label": "" }
+//   ],
+//   "cta": {
+//     "headline": "عنوان CTA قوي وخاص",
+//     "subheadline": "جملة تحفيزية",
+//     "button": "نص زر واضح"
+//   }
+// }`;
+ 
+// const SYS_COMPETITORS = `أنت محلل أسواق متخصص في السوق العربي. بناءً على وصف المشروع، قدم تحليلاً للمنافسين والسوق.
+// رد بـ JSON فقط بدون أي نص أو markdown أو code fences:
+// {
+//   "marketOverview": "نظرة عامة على السوق بـ 2-3 جمل",
+//   "competitors": [
+//     {
+//       "name": "اسم المنافس أو النوع",
+//       "type": "مباشر / غير مباشر",
+//       "strengths": "نقاط قوته",
+//       "weaknesses": "نقاط ضعفه",
+//       "website": "domain.com إن وجد",
+//       "marketShare": "كبير / متوسط / صغير"
+//     }
+//   ],
+//   "gaps": ["فرصة في السوق ١", "فرصة في السوق ٢", "فرصة في السوق ٣"],
+//   "differentiators": ["ما يجعل مشروعك مختلفاً ١", "ما يجعل مشروعك مختلفاً ٢"],
+//   "searchKeywords": ["كلمة بحثية ١", "كلمة بحثية ٢", "كلمة بحثية ٣"],
+//   "marketSize": "صغير / متوسط / كبير / ضخم",
+//   "competitionLevel": "منخفض / متوسط / عالي / شرس",
+//   "recommendation": "توصية استراتيجية مختصرة للدخول للسوق"
+// }`;
+ 
+// const SYS_BROCHURE = `أنت مصمم بروشورات احترافية للسوق العربي. أنشئ محتوى بروشور مخصصاً وفريداً لهذا البراند.
+// لا تستخدم عبارات عامة أو مكررة. كل نقطة يجب أن تعكس طبيعة المشروع المحدد.
+// رد بـ JSON فقط بدون أي نص أو markdown أو code fences:
+// {
+//   "headline": "عنوان البروشور الرئيسي - قوي وخاص",
+//   "intro": "مقدمة مخصصة للبراند - 3 جمل تشرح القيمة الفريدة",
+//   "sections": [
+//     { "title": "عنوان قسم مخصص", "content": "محتوى القسم مرتبط بطبيعة المشروع" },
+//     { "title": "", "content": "" },
+//     { "title": "", "content": "" }
+//   ],
+//   "services": [
+//     { "icon": "🎯", "name": "خدمة أو منتج حقيقي من المشروع", "brief": "وصف مختصر" },
+//     { "icon": "⚡", "name": "", "brief": "" },
+//     { "icon": "✨", "name": "", "brief": "" }
+//   ],
+//   "whyUs": ["سبب اختيارنا ١ - خاص بهذا البراند", "سبب ٢", "سبب ٣", "سبب ٤"],
+//   "contact": { "tagline": "عبارة تواصل جذابة", "cta": "نص زر التواصل" }
+// }`;
+ 
+// // ─────────────────────────────────────────────
+// // AI CALLER with JSON Mode & Retry
+// // ─────────────────────────────────────────────
+ 
+// const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+ 
+// async function callAI(
+//   systemPrompt: string,
+//   userMsg: string,
+//   retries = 3,
+//   isJson = true // افتراضي: إرجاع JSON
+// ): Promise<string> {
+//   for (let attempt = 0; attempt < retries; attempt++) {
+//     try {
+//       const res = await client.chat.completions.create({
+//         model: "llama-3.3-70b-versatile",
+//         temperature: 0.7, // تقليل بسيط لزيادة الدقة
+//         max_tokens: 4000,
+//         // تفعيل JSON Mode إذا كان مطلوباً
+//         ...(isJson && { response_format: { type: "json_object" } }),
+//         messages: [
+//           { role: "system", content: systemPrompt },
+//           { role: "user", content: userMsg },
+//         ],
+//       });
+//       return res.choices?.[0]?.message?.content || (isJson ? "{}" : "");
+//     } catch (err: any) {
+//       const isRateLimit =
+//         err?.status === 429 || err?.code === "rate_limit_exceeded";
+//       if (isRateLimit && attempt < retries - 1) {
+//         const retryAfter = parseInt(err?.headers?.["retry-after"] || "10", 10);
+//         const waitMs = (retryAfter + 1) * 1000;
+//         console.log(
+//           `Rate limit hit, waiting ${retryAfter + 1}s before retry ${attempt + 1}/${retries - 1}...`,
+//         );
+//         await sleep(waitMs);
+//         continue;
+//       }
+//       throw err;
+//     }
+//   }
+//   return isJson ? "{}" : "";
+// }
+ 
+// // ─────────────────────────────────────────────
+// // LOGO GENERATOR (DALL-E 3 PRIMARY, FLUX FALLBACK)
+// // ─────────────────────────────────────────────
+
+// async function generateLogoWithDalle(prompt: string, retries = 2): Promise<string | null> {
+//   if (!openAIRealClient) return null;
+  
+//   for (let attempt = 0; attempt < retries; attempt++) {
+//     try {
+//       console.log(`Generating high-quality logo with DALL-E 3 (attempt ${attempt + 1})...`);
+//       const response = await openAIRealClient.images.generate({
+//         model: "dall-e-3",
+//         prompt: prompt,
+//         n: 1,
+//         size: "1024x1024",
+//         quality: "hd",
+//         response_format: "b64_json",
+//       });
+      
+//       // Add optional chaining (?.) to safely access data and the first element
+//       const b64 = response.data?.[0]?.b64_json;
+//       return b64 ? `data:image/png;base64,${b64}` : null;
+//     } catch (err: any) {
+//       console.error(`DALL-E error:`, err?.message);
+//       if (attempt < retries - 1) await sleep(3000);
+//     }
+//   }
+//   return null;
+// }
+// async function generateLogoWithFlux(
+//   prompt: string,
+//   retries = 2,
+// ): Promise<string | null> {
+//   if (!process.env.HF_TOKEN) return null;
+ 
+//   const safePrompt = prompt.replace(/[^\x00-\x7F]/g, "").slice(0, 500).trim();
+//   if (!safePrompt) return null;
+ 
+//   for (let attempt = 0; attempt < retries; attempt++) {
+//     try {
+//       console.log(`Generating logo with FLUX.1-dev (attempt ${attempt + 1})...`);
+//       const image = await hfClient.textToImage({
+//         model: "black-forest-labs/FLUX.1-dev",
+//         inputs: safePrompt,
+//         parameters: { 
+//           num_inference_steps: 25, // تقليل الخطوات للرسومات المسطحة Vector
+//           guidance_scale: 4.0      
+//         },
+//       });
+ 
+//       const imageBlob = (image as any) instanceof Blob ? image : await fetch(image as string).then(r => r.blob());
+//       const arrayBuffer = await (imageBlob as Blob).arrayBuffer();
+//       const buffer = Buffer.from(arrayBuffer);
+ 
+//       if (buffer.length < 1000) throw new Error("Image too small");
+ 
+//       return `data:image/png;base64,${buffer.toString("base64")}`;
+//     } catch (err: any) {
+//       console.error(`FLUX error:`, err?.message);
+//       if (attempt < retries - 1) await sleep(4000);
+//     }
+//   }
+//   return null;
+// }
+
+// // دالة مجمعة لاختيار أفضل موديل لوجو متاح
+// async function generateBestLogo(prompt: string): Promise<string | null> {
+//   // المحاولة الأولى مع DALL-E 3 إذا كان المفتاح متوفراً
+//   let logo = await generateLogoWithDalle(prompt);
+//   if (logo) return logo;
+  
+//   // المحاولة الثانية مع FLUX
+//   return await generateLogoWithFlux(prompt);
+// }
+ 
+// // ─────────────────────────────────────────────
+// // PARSERS
+// // ─────────────────────────────────────────────
+ 
+// function parseJSON(raw: string): any {
+//   try {
+//     if (!raw || raw.trim() === "{}") return null;
+//     const clean = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+//     const i = clean.search(/[{[]/);
+//     return i >= 0 ? JSON.parse(clean.slice(i)) : null;
+//   } catch (err) {
+//     console.error("JSON parsing error, raw was:", raw);
+//     return null;
+//   }
+// }
+ 
+// function parseSVG(raw: string): string | null {
+//   const clean = raw.replace(/```(?:xml|html|svg)?\n?/gi, "").replace(/```\n?/g, "").trim();
+//   const i = clean.indexOf("<svg");
+//   return i >= 0 ? clean.slice(i).trim() : null;
+// }
+ 
+// function sanitizeSVG(raw: string): string {
+//   if (!raw || !raw.includes("<svg")) return "";
+//   let svg = raw.trim();
+//   if (!svg.includes("xmlns")) svg = svg.replace("<svg", `<svg xmlns="http://www.w3.org/2000/svg"`);
+//   if (!svg.includes("viewBox")) svg = svg.replace("<svg", `<svg viewBox="0 0 300 300"`);
+//   return svg;
+// }
+ 
+// function fallbackSVG(name: string, primary: string, secondary: string): string {
+//   const init = (name || "BR").slice(0, 2).toUpperCase();
+//   return `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+//   <rect width="300" height="300" fill="${secondary}"/>
+//   <circle cx="150" cy="115" r="68" fill="${primary}" opacity=".12"/>
+//   <circle cx="150" cy="115" r="50" fill="${primary}" opacity=".2"/>
+//   <circle cx="150" cy="115" r="36" fill="${primary}"/>
+//   <text x="150" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="${secondary}">${init}</text>
+//   <text x="150" y="200" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="${primary}">${name}</text>
+//   <rect x="80" y="218" width="140" height="1.5" fill="${primary}" opacity=".35" rx="1"/>
+// </svg>`;
+// }
+ 
+// // ─────────────────────────────────────────────
+// // TYPES & INTERFACES
+// // ─────────────────────────────────────────────
+ 
+// export interface GenerateParams {
+//   idea: string;
+//   brandName?: string;
+//   style: string;
+//   colors: string[];
+// }
+ 
+// export interface BrandKitResult {
+//   brand: any;
+//   logo: string;
+//   logoFormat: "image" | "svg";
+//   social: any;
+//   landing: any;
+//   brochureContent: any;
+//   competitors: any;
+// }
+ 
+// // ─────────────────────────────────────────────
+// // MAIN GENERATOR
+// // ─────────────────────────────────────────────
+ 
+// export const generateFullBrandKit = async (
+//   params: GenerateParams,
+// ): Promise<BrandKitResult> => {
+//   const { idea, brandName, style, colors } = params;
+ 
+//   const styleMap: Record<string, string> = {
+//     modern: "عصري", luxury: "فاخر", youth: "شبابي", minimal: "بسيط", arabic: "تراثي", tech: "تقني",
+//   };
+ 
+//   const colorMap: Record<string, string> = {
+//     gold: "ذهبي", navy: "كحلي", green: "أخضر", red: "أحمر", purple: "بنفسجي", teal: "تيل", black: "أسود", coral: "مرجاني",
+//   };
+ 
+//   const styleName = styleMap[style] ?? style;
+//   const colNames = colors.map((c) => colorMap[c] ?? c).join("، ");
+ 
+//   // تم تحسين القاعدة لضمان جودة اللغة العربية
+//   const base = `فكرة المشروع بالتفصيل: ${idea}
+// ${brandName ? `اسم البراند المحدد: ${brandName}` : "لا يوجد اسم — ولّد 3 أسماء عربية مميزة ومناسبة لهذا المشروع تحديداً"}
+// الأسلوب البصري المطلوب: ${styleName}
+// ${colNames ? `الألوان المفضلة: ${colNames}` : ""}
+// تذكر: كل المخرجات يجب أن تكون مخصصة لهذه الفكرة، مكتوبة بلغة عربية فصحى تسويقية بليغة، وخالية من الأخطاء الإملائية. تأكد من إرجاع استجابة بتنسيق JSON حصرياً.`;
+ 
+//   // ── Phase 1: Brand Identity ──
+//   console.log("Phase 1: Generating Brand Identity...");
+//   const brandRaw = await callAI(
+//     SYS_BRAND,
+//     base + "\nولّد Brand Kit كامل احترافي ومخصص لهذا المشروع.",
+//     3,
+//     true // تفعيل JSON mode
+//   );
+//   const brand = parseJSON(brandRaw);
+ 
+//   if (!brand) throw new Error("فشل تحليل Brand JSON من AI");
+ 
+//   const primary = brand.colors?.[0]?.hex ?? "#C9973A";
+//   const secondary = brand.colors?.[1]?.hex ?? "#13131E";
+//   const namesList: string[] = (brand.names || []).map((n: any) => typeof n === "string" ? n : n.name);
+//   const displayName = brandName || brand.recommendedName || namesList[0] || "Brand";
+ 
+//   // ── Phase 2: Logo Prompt Construction ──
+//   // نستخدم isJson=false لأننا نريد نص فقط
+//   const logoPromptRaw = await callAI(
+//     SYS_LOGO_PROMPT,
+//     `Brand Name: ${displayName} \nBrand Industry/Idea: ${idea.slice(0, 200)} \nVisual Style: ${styleName} \nPrimary Color: ${primary} \nSecondary Color: ${secondary} \nAccent Color: ${brand.colors?.[2]?.hex || "#FFFFFF"} \nWrite a tailored visual logo generation prompt. Important: ICON ONLY, absolutely NO text/letters.`,
+//     2,
+//     false
+//   );
+//   const logoPrompt = logoPromptRaw.replace(/```[\s\S]*?```/g, "").replace(/^["'`]+|["'`]+$/g, "").replace(/[^\x00-\x7F]/g, "").slice(0, 500).trim();
+ 
+//   // ── Phase 3: ALL NEXT STEPS IN PARALLEL ──
+//   console.log("Phase 3: Launching all content tasks in parallel...");
+ 
+//   const [logoRes, socialRaw, landingRaw, brochureRaw, competitorsRaw] = await Promise.all([
+//     generateBestLogo(logoPrompt).catch(() => null),
+//     callAI(SYS_SOCIAL, `${base}\nالبراند: ${displayName}\nالشعار والرسالة: ${brand.tagline?.ar || ""}\nالقيمة الفريدة: ${brand.strategy?.value || ""}\nالجمهور المستهدف: ${brand.strategy?.audience || ""}\nاصنع محتوى سوشيال مميز.`, 3, true),
+//     callAI(SYS_LANDING, `${base}\nالبراند: ${displayName}\nالشعار: ${brand.tagline?.ar || ""}\nالقيمة الفريدة: ${brand.strategy?.value || ""}\nالجمهور: ${brand.strategy?.audience || ""}\nالتموضع: ${brand.strategy?.positioning || ""}\nاصنع محتوى Landing Page.`, 3, true),
+//     callAI(SYS_BROCHURE, `${base}\nالبراند: ${displayName}\nالشعار: ${brand.tagline?.ar || ""}\nالقيمة الفريدة: ${brand.strategy?.value || ""}\nالجمهور: ${brand.strategy?.audience || ""}\nالرسائل التسويقية: ${(brand.messages || []).join(" | ")}\nاصنع محتوى بروشور احترافي.`, 2, true).catch(() => "{}"),
+//     callAI(SYS_COMPETITORS, `فكرة المشروع: ${idea}\nالبراند: ${displayName}\nالسوق المستهدف: ${brand.strategy?.audience || ""}\nالتموضع: ${brand.strategy?.positioning || ""}\nحلل السوق والمنافسين لهذا النوع من المشاريع.`, 2, true).catch(() => "{}")
+//   ]);
+ 
+//   // ── Processing Logo Output ──
+//   let logo: string;
+//   let logoFormat: "image" | "svg";
+ 
+//   if (logoRes) {
+//     logo = logoRes;
+//     logoFormat = "image";
+//   } else {
+//     console.log("AI Image generation skipped or failed, designing an ultra-fast SVG fallback...");
+//     const svgRaw = await callAI(SYS_LOGO, `Brand Name: ${displayName}\nStyle: ${styleName}\nPrimary Color: ${primary}\nSecondary Color: ${secondary}\nBrand Idea: ${idea.slice(0, 120)}\nCreate a unique minimal geometric SVG logo that reflects this brand's identity.`, 2, false);
+//     const parsed = parseSVG(svgRaw);
+//     logo = parsed ? sanitizeSVG(parsed) : fallbackSVG(displayName, primary, secondary);
+//     logoFormat = "svg";
+//   }
+ 
+//   console.log("Brand Kit constructed perfectly!");
+ 
+//   return {
+//     brand,
+//     logo,
+//     logoFormat,
+//     social: parseJSON(socialRaw),
+//     landing: parseJSON(landingRaw),
+//     brochureContent: parseJSON(brochureRaw),
+//     competitors: parseJSON(competitorsRaw) || {},
+//   };
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
 // out of scope
 
 // import OpenAI from "openai";

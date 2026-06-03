@@ -13,152 +13,204 @@ class EmailService {
   private transporter;
 
   constructor() {
- this.transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.APP_EMAIL_ADDRESS,
-    pass: process.env.APP_EMAIL_PASSWORD,
-  },
-  secure: true, 
-});
+    this.transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.APP_EMAIL_ADDRESS,
+        pass: process.env.APP_EMAIL_PASSWORD,
+      },
+      secure: true,
+    });
   }
 
-  // إرسال إيميل عام
   async sendEmail({ to, subject, html }: SendEmailProps) {
     await this.transporter.sendMail({
-      from: process.env.APP_EMAIL_ADDRESS,
+      from: `"ArabBrand" <${process.env.APP_EMAIL_ADDRESS}>`,
       to,
       subject,
       html,
     });
-
-    console.log(`📧 Email sent to ${to}`);
   }
 
-  // إرسال OTP
+  // ================= OTP EMAIL =================
   async sendOtpEmail({ to, subject, otp }: SendEmailProps) {
     console.log(`✉️ Sending OTP email to: ${to}`);
 
     const htmlContent = `
-      <div style="font-family: Helvetica, Arial; background:#f4f4f7; padding:40px 0;">
-        <div style="max-width:600px; margin:auto; background:#fff; padding:40px; border-radius:12px;">
-          <h1 style="color:#333; text-align:center; font-size:28px;">🔐 Verify Your Account</h1>
-          <p style="text-align:center; color:#555;">Use the OTP below. It expires in 5 minutes.</p>
+      <div style="font-family: Arial; background:#0b0b14; padding:40px 0;">
+        <div style="
+          max-width:600px;
+          margin:auto;
+          background:#0e0e1a;
+          padding:40px;
+          border-radius:16px;
+          border:1px solid #1e1e2e;
+          box-shadow:0 24px 80px rgba(0,0,0,.5);
+          text-align:center;
+        ">
 
-          <div style="text-align:center; margin:30px 0;">
-            <span style="
-              font-size:36px;
-              font-weight:bold;
-              letter-spacing:10px;
-              background:linear-gradient(90deg,#6a11cb,#2575fc);
-              color:#fff;
-              padding:20px 35px;
-              border-radius:12px;
-              display:inline-block;">
-              ${otp}
-            </span>
+          <h1 style="
+            background:linear-gradient(90deg,#f0c96b,#c9973a);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            font-size:28px;
+            margin-bottom:10px;
+          ">
+            🔐 ArabBrand Verification
+          </h1>
+
+          <p style="color:#8a8498;font-size:14px;">
+            Use the OTP below to verify your account
+          </p>
+
+          <div style="
+            margin:30px 0;
+            font-size:34px;
+            font-weight:bold;
+            letter-spacing:10px;
+            background:#08080f;
+            color:#f0c96b;
+            padding:18px;
+            border-radius:12px;
+            border:1px solid #c9973a44;
+            font-family:monospace;
+          ">
+            ${otp}
           </div>
 
-          <p style="text-align:center; color:#777;">
-            If you didn't request this, ignore this email.
+          <p style="color:#6b6478;font-size:12px;">
+            This code expires in 10 minutes
           </p>
+
+          <p style="color:#3a3650;font-size:11px;margin-top:20px;">
+            © ${new Date().getFullYear()} ArabBrand. All rights reserved.
+          </p>
+
         </div>
       </div>
     `;
 
     return this.sendEmail({
       to,
-      subject: subject || "Your OTP Verification Code",
+      subject: subject || "ArabBrand OTP Verification",
       html: htmlContent,
     });
   }
 
-  // OTP Success
+  // ================= SUCCESS =================
   async sendOtpSuccessEmail({ to }: SendEmailProps) {
     console.log(`✅ Sending OTP Success email to: ${to}`);
 
     const htmlContent = `
-      <div style="font-family: Helvetica, Arial; background:#f4f4f7; padding:40px 0;">
-        <div style="max-width:600px; margin:auto; background:#fff; padding:40px; border-radius:12px;">
-          <h1 style="color:#28a745; text-align:center; font-size:28px;">
-            ✅ Verification Successful
+      <div style="font-family: Arial; background:#0b0b14; padding:40px 0;">
+        <div style="
+          max-width:600px;
+          margin:auto;
+          background:#0e0e1a;
+          padding:40px;
+          border-radius:16px;
+          border:1px solid #1e1e2e;
+          text-align:center;
+        ">
+
+          <h1 style="color:#f0c96b;font-size:26px;">
+            ✅ Verified Successfully
           </h1>
 
-          <p style="text-align:center; color:#555;">
-            Your OTP has been verified successfully.
-            You can now log in to your account.
+          <p style="color:#8a8498;font-size:14px;">
+            Your ArabBrand account has been verified successfully.
           </p>
+
         </div>
       </div>
     `;
 
     return this.sendEmail({
       to,
-      subject: "OTP Verification Successful",
+      subject: "ArabBrand - Verification Successful",
       html: htmlContent,
     });
   }
 
-  // Welcome After Login
+  // ================= WELCOME =================
   async sendWelcomeAfterLogin({ to, subject }: SendEmailProps) {
     console.log(`👋 Sending Welcome email to: ${to}`);
 
     const htmlContent = `
-      <div style="font-family: Helvetica, Arial; background:#f4f4f7; padding:40px 0;">
-        <div style="max-width:600px; margin:auto; background:#fff; padding:40px; border-radius:12px; text-align:center;">
-          <h1 style="color:#333; font-size:28px;">👋 Welcome Back!</h1>
+      <div style="font-family: Arial; background:#0b0b14; padding:40px 0;">
+        <div style="
+          max-width:600px;
+          margin:auto;
+          background:#0e0e1a;
+          padding:40px;
+          border-radius:16px;
+          border:1px solid #1e1e2e;
+          text-align:center;
+        ">
 
-          <p style="font-size:18px; color:#007bff; font-weight:bold;">
+          <h1 style="
+            background:linear-gradient(90deg,#f0c96b,#c9973a);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            font-size:28px;
+          ">
+            👋 Welcome Back to ArabBrand
+          </h1>
+
+          <p style="color:#8a8498;font-size:14px;">
             You have successfully logged in
           </p>
 
-          <p style="font-size:14px; color:#555;">
-            We're happy to see you again!
-            If this wasn't you, secure your account immediately.
-          </p>
         </div>
       </div>
     `;
 
     return this.sendEmail({
       to,
-      subject: subject || "Login Notification",
+      subject: subject || "ArabBrand Login Notification",
       html: htmlContent,
     });
   }
 
-  // Reset Password
+  // ================= RESET PASSWORD =================
   async sendResetPasswordEmail(to: string, link: string) {
     console.log(`🔑 Sending Reset Password email to: ${to}`);
 
     const htmlContent = `
-      <div style="font-family: Helvetica, Arial; background:#f4f4f7; padding:40px 0;">
-        <div style="max-width:600px; margin:auto; background:#fff; padding:40px; border-radius:12px; text-align:center;">
+      <div style="font-family: Arial; background:#0b0b14; padding:40px 0;">
+        <div style="
+          max-width:600px;
+          margin:auto;
+          background:#0e0e1a;
+          padding:40px;
+          border-radius:16px;
+          border:1px solid #1e1e2e;
+          text-align:center;
+        ">
 
-          <h1 style="color:#d9534f; font-size:26px; margin-bottom:20px;">
-            🔑 Reset Your Password
+          <h1 style="color:#f0c96b;font-size:26px;">
+            🔑 Reset Password
           </h1>
 
-          <p style="font-size:16px; color:#555; margin-bottom:20px;">
-            You requested to reset your password.
-            Click the button below:
+          <p style="color:#8a8498;font-size:14px;">
+            Click below to reset your password
           </p>
 
-          <a href="${link}"
-             style="display:inline-block; padding:15px 30px;
-             font-size:16px; color:#fff; background:#007bff;
-             border-radius:8px; text-decoration:none;">
-             Reset Password
+          <a href="${link}" style="
+            display:inline-block;
+            margin-top:20px;
+            padding:14px 28px;
+            background:linear-gradient(90deg,#f0c96b,#c9973a);
+            color:#0b0b14;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:bold;
+          ">
+            Reset Password
           </a>
 
-          <p style="font-size:14px; color:#777; margin-top:20px;">
-            If you didn't request this, you can ignore this email.
-          </p>
-
-          <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-
-          <p style="font-size:12px; color:#999;">
-            © ${new Date().getFullYear()} Your Company
+          <p style="color:#3a3650;font-size:11px;margin-top:25px;">
+            © ${new Date().getFullYear()} ArabBrand
           </p>
 
         </div>
@@ -167,47 +219,44 @@ class EmailService {
 
     return this.sendEmail({
       to,
-      subject: "Reset Your Password",
+      subject: "ArabBrand - Reset Password",
       html: htmlContent,
     });
   }
 
-  // Event Notification
-  async notificationNewEvent({
-    to,
-    subject,
-    title,
-    body,
-  }: SendEmailProps) {
+  // ================= NOTIFICATION =================
+  async notificationNewEvent({ to, subject, title, body }: SendEmailProps) {
     const htmlContent = `
-      <div style="font-family: Helvetica, Arial; background:#f4f4f7; padding:40px 0;">
-        <div style="max-width:600px; margin:auto; background:#fff; padding:40px; border-radius:12px;">
+      <div style="font-family: Arial; background:#0b0b14; padding:40px 0;">
+        <div style="
+          max-width:600px;
+          margin:auto;
+          background:#0e0e1a;
+          padding:40px;
+          border-radius:16px;
+          border:1px solid #1e1e2e;
+          text-align:center;
+        ">
 
-          <h2 style="color:#333; text-align:center;">
+          <h2 style="color:#f0c96b;">
             🔔 ${title}
           </h2>
 
-          <p style="font-size:16px; color:#555; margin-top:20px;">
+          <p style="color:#8a8498;font-size:14px;">
             ${body}
           </p>
-
-          <div style="margin-top:30px; font-size:12px; color:#999; text-align:center;">
-            This notification was sent automatically after event creation.
-          </div>
 
         </div>
       </div>
     `;
 
-    const payload = {
+    await this.sendEmail({
       to,
       subject: subject || title,
       html: htmlContent,
-    };
+    });
 
-    await this.sendEmail(payload);
-
-    return payload;
+    return { to, subject, title };
   }
 }
 

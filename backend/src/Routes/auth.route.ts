@@ -36,14 +36,18 @@ router.get(
     failureRedirect: "http://localhost:5173/login",
     session: true,
   }),
-  async (req, res) => {
-    try {
-      return res.redirect("http://localhost:5173/dashboard");
-    } catch (error) {
-      console.error("Google Callback Error:", error);
+  (req: any, res) => {
+    req.session.userId = req.user._id.toString();
+    req.session.userRole = req.user.role;
 
-      return res.redirect("http://localhost:5173/login");
-    }
-  },
+    req.session.save((err: any) => {
+      if (err) {
+        console.error(err);
+        return res.redirect("http://localhost:5173/login");
+      }
+
+      return res.redirect("http://localhost:5173/dashboard");
+    });
+  }
 );
 export default router;

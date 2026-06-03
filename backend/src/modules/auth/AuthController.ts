@@ -70,20 +70,15 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       otp,
       subject: "Your OTP Verification Code",
     });
-    console.log("✅ OTP email sent to:", email);
   } catch (emailErr) {
-    console.error("❌ Email error:", emailErr);
+    console.error(" Email error:", emailErr);
   }
-  // logger.success("USER CREATED", { userId: user._id });
-  // req.session.userId = user._id.toString();
-  // req.session.userRole = user.role;
 
   res.status(201).json({ message: "User registered", user });
 });
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    console.log("🔥 VERIFY OTP CALLED");
     const { email, otp } = req.body;
 
     const user = await User.findOne({ email });
@@ -121,7 +116,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
         subject: "Verification successful",
       });
     } catch (e) {
-      console.error("❌ Email error:", e);
+      console.error(" Email error:", e);
     }
 
     res.status(200).json({ message: "Verified successfully" });
@@ -143,12 +138,11 @@ export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
   const otp = crypto.randomInt(100000, 999999).toString();
   user.otp = await bcrypt.hash(otp, 5);
   user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-  await user.save(); // ✅ إصلاح: حذف الكود الخطأ (this.userRepository + قوس ناقص)
+  await user.save();
 
   logger.success("NEW OTP GENERATED", { otp });
 
   await EmailService.sendOtpEmail({
-    // ✅ إصلاح: كان this.EmailService
     to: email,
     otp,
     subject: "New OTP to Verification Code",
@@ -175,7 +169,7 @@ export const forgetPassword = asyncHandler(
     const link = `${process.env.FRONTEND_URL}/reset-password/${user._id}/${token}`;
     logger.info("RESET LINK", { link });
 
-    await EmailService.sendResetPasswordEmail(email, link); // ✅ إصلاح: كان ناقص
+    await EmailService.sendResetPasswordEmail(email, link);
 
     res.json({ message: "Email sent" });
   },
@@ -237,12 +231,28 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const getMe = asyncHandler(async (req: Request, res: Response) => {
-  logger.info("GET ME", { userId: req.session.userId });
-  const user = await User.findById(req.session.userId).select("-password");
-  if (!user) {
-    res.status(404).json({ message: "Not found" });
-    return;
+// export const getMe = asyncHandler(async (req: Request, res: Response) => {
+//   logger.info("GET ME", { userId: req.session.userId });
+//   const user = await User.findById(req.session.userId).select("-password");
+//   if (!user) {
+//     res.status(404).json({ message: "Not found" });
+//     return;
+//   }
+//   res.json({ user });
+// });
+
+
+
+
+
+export const getMe = asyncHandler(async (req: any, res: Response) => {
+  if (!req.user) {
+     res.status(401).json({
+      message: "Unauthorized",
+    });
   }
-  res.json({ user });
+
+  res.json({
+    user: req.user,
+  });
 });

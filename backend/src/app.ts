@@ -1,4 +1,3 @@
-console.log("🔥 APP.TS TOP");
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -18,10 +17,10 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
-      "https://arab-brand.vercel.app/",
-      "https://arab-brand-git-master-omar113650s-projects.vercel.app/",
-      "https://arab-brand-kg3ri8r1i-omar113650s-projects.vercel.app/",
-      "https://arab-brand-4qj7.vercel.app/",
+      "https://arab-brand.vercel.app",
+      "https://arab-brand-git-master-omar113650s-projects.vercel.app",
+      "https://arab-brand-kg3ri8r1i-omar113650s-projects.vercel.app",
+      "https://arab-brand-4qj7.vercel.app",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
