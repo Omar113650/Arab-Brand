@@ -7,7 +7,7 @@
 
 //   idea: string;
 
-//   customBrandName?: string;
+//   customBrandName?: string;z
 
 //   selectedStyle: string;
 

@@ -1,3 +1,111 @@
+
+
+
+
+
+
+
+// import { Router } from "express";
+// import { protect } from "../../middlewares/auth.middleware";
+// import {
+//   createProject,
+//   getProjects,
+//   getProjectStatus,
+//   getProjectResult,
+//   deleteProject,
+//   generateExtraSocial,
+//   regenerateSection,
+// } from "./project.controller";
+
+// const router = Router();
+
+// // ── Apply auth middleware to all routes ──
+// router.use(protect);
+
+// // ── Core project routes ──
+// router.post("/",           createProject);
+// router.get("/",            getProjects);
+// router.get("/:id",         getProjectStatus);
+// router.get("/:id/result",  getProjectResult);
+// router.delete("/:id",      deleteProject);
+
+// // ── Extra content (paid) ──
+// router.post("/:id/extra-social",              generateExtraSocial);
+
+// // ── Regenerate individual sections ──
+// // section = objections | productFocus | launchPlan | swot | competitors | brochureContent
+// router.post("/:id/regenerate/:section",       regenerateSection);
+
+// export default router;
+
+
+
+
+
+
+
+// الي عملته يوم الماتش 
+
+
+
+
+
+// import { Router } from "express";
+// import { protect } from "../../middlewares/auth.middleware";
+// import {
+//   createProject,
+//   getProjects,
+//   getProjectStatus,
+//   getProjectResult,
+//   deleteProject,
+//   generateExtraSocial,
+//   regenerateSection,
+// } from "./project.controller";
+
+// const router = Router();
+
+// // ── Apply auth middleware to all routes ──
+// router.use(protect);
+
+// // ── Core project routes ──
+// router.post("/",          createProject);
+// router.get("/",           getProjects);
+// router.get("/:id",        getProjectStatus);
+// router.get("/:id/result", getProjectResult);
+// router.delete("/:id",     deleteProject);
+
+// // ── Extra content (paid) ──
+// router.post("/:id/extra-social", generateExtraSocial);
+
+// // ── Regenerate individual sections ──
+// // section = objections | productFocus | launchPlan | swot | competitors | brochureContent | ageSegments
+// router.post("/:id/regenerate/:section", regenerateSection);
+
+// export default router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// اليوم اخر نسخه عملتها يوم 6/9
+
 import { Router } from "express";
 import { protect } from "../../middlewares/auth.middleware";
 import {
@@ -7,28 +115,26 @@ import {
   getProjectResult,
   deleteProject,
   generateExtraSocial,
-  // generateLaunchPlanEndpoint,
-  // generateAdScriptsEndpoint,
-  // generateBuyerPersonaEndpoint
-  // generateEmailCampaignEndpoint
+  regenerateSection,
 } from "./project.controller";
 
 const router = Router();
 
-// router.use(protect); 
+// ── Apply auth middleware to all routes ──
+router.use(protect);
 
-router.post("/", createProject);
-router.get("/",  getProjects);
-router.get("/:id", getProjectStatus);
+// ── Core project routes ──
+router.post("/",          createProject);
+router.get("/",           getProjects);
+router.get("/:id",        getProjectStatus);
 router.get("/:id/result", getProjectResult);
-router.delete("/:id", deleteProject);
+router.delete("/:id",     deleteProject);
 
-// out of scope
+// ── Extra content (paid) ──
+router.post("/:id/extra-social", generateExtraSocial);
 
-// router.post("/:id/social/generate",        generateExtraSocial);
-// router.post("/:id/generate/launch-plan",   generateLaunchPlanEndpoint);
-// router.post("/:id/generate/buyer-persona", generateBuyerPersonئaEndpoint);
-// router.post("/:id/generate/ad-scripts",    generateAdScriptsEndpoint);
-// router.post("/:id/generate/email-campaign",generateEmailCampaignEndpoint);
+// ── Regenerate individual sections ──
+// section = objections | productFocus | launchPlan | swot | competitors | brochureContent | ageSegments | businessOverview | agePreferences | faq
+router.post("/:id/regenerate/:section", regenerateSection);
 
 export default router;
