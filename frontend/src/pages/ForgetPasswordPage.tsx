@@ -104,7 +104,7 @@ export default function ForgetPasswordPage() {
                 fontWeight="800"
                 fill="#0A0800"
               >
-                AB
+                EG
               </text>
               <defs>
                 <linearGradient id="fpHex" x1="0" y1="0" x2="1" y2="1">
@@ -124,7 +124,7 @@ export default function ForgetPasswordPage() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              ArabBrand
+              EG Brand
             </span>
           </Link>
         </div>

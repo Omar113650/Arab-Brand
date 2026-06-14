@@ -375,7 +375,7 @@
 //               fontWeight="900"
 //               fill="#08080F"
 //             >
-//               AB
+//               EG
 //             </text>
 //           </svg>
 //           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -391,7 +391,7 @@
 //                 lineHeight: 1.1,
 //               }}
 //             >
-//               ArabBrand
+//               EG Brand
 //             </span>
 //             <span
 //               style={{
@@ -1212,7 +1212,7 @@
 //                 fontWeight="900"
 //                 fill="#08080F"
 //               >
-//                 AB
+//                 EG
 //               </text>
 //             </svg>
 //             <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1227,7 +1227,7 @@
 //                   lineHeight: 1.1,
 //                 }}
 //               >
-//                 ArabBrand
+//                 EG Brand
 //               </span>
 //               <span
 //                 style={{
@@ -4266,7 +4266,7 @@
 //           </svg>
 //           <div style={{ display: "flex", flexDirection: "column" }}>
 //             <span style={{ fontFamily: "Sora, sans-serif", fontSize: "15px", fontWeight: 800, letterSpacing: "0.3px", background: "linear-gradient(90deg, #F0C96B, #C9973A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>
-//               ArabBrand
+//               EG Brand
 //             </span>
 //             <span style={{ fontFamily: "Tajawal, sans-serif", fontSize: "10px", fontWeight: 500, color: "#5A5270", letterSpacing: "0.5px", lineHeight: 1 }}></span>
 //           </div>
@@ -4624,7 +4624,7 @@
 //               <text x="18" y="23" textAnchor="middle" fontFamily="Tajawal, sans-serif" fontSize="13" fontWeight="900" fill="#08080F">ع</text>
 //             </svg>
 //             <div style={{ display: "flex", flexDirection: "column" }}>
-//               <span style={{ fontFamily: "Sora, sans-serif", fontSize: "14px", fontWeight: 800, background: "linear-gradient(90deg,#F0C96B,#C9973A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>ArabBrand</span>
+//               <span style={{ fontFamily: "Sora, sans-serif", fontSize: "14px", fontWeight: 800, background: "linear-gradient(90deg,#F0C96B,#C9973A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>EG Brand</span>
 //               <span style={{ fontFamily: "Tajawal, sans-serif", fontSize: "9px", color: "#5A5270", letterSpacing: "0.5px", lineHeight: 1 }}></span>
 //             </div>
 //           </div>
@@ -6859,7 +6859,7 @@ export default function Dashboard() {
                 lineHeight: 1.1,
               }}
             >
-              ArabBrand
+              EG Brand
             </span>
             <span
               style={{
@@ -7719,7 +7719,7 @@ function ResultScreen({
                   lineHeight: 1.1,
                 }}
               >
-                ArabBrand
+                EG Brand
               </span>
               <span
                 style={{

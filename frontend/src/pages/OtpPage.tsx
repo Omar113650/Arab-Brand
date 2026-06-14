@@ -67,7 +67,7 @@ export default function OtpPage() {
           <Link to="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "10px" }}>
             <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
               <polygon points="17,2 30,9 30,25 17,32 4,25 4,9" fill="url(#otpHex)" />
-              <text x="17" y="21" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fontWeight="800" fill="#0A0800">AB</text>
+              <text x="17" y="21" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fontWeight="800" fill="#0A0800">EG</text>
               <defs>
                 <linearGradient id="otpHex" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor="#F0C96B" />
@@ -76,7 +76,7 @@ export default function OtpPage() {
               </defs>
             </svg>
             <span style={{ fontFamily: "Sora, sans-serif", fontSize: "15px", fontWeight: 800, letterSpacing: "0.5px", background: "linear-gradient(90deg,#F0C96B,#C9973A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              ArabBrand
+              EG Brand
             </span>
           </Link>
         </div>

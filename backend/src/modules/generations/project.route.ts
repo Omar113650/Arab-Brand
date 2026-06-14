@@ -103,9 +103,6 @@
 
 
 
-
-// اليوم اخر نسخه عملتها يوم 6/9
-
 import { Router } from "express";
 import { protect } from "../../middlewares/auth.middleware";
 import {
@@ -138,3 +135,27 @@ router.post("/:id/extra-social", generateExtraSocial);
 router.post("/:id/regenerate/:section", regenerateSection);
 
 export default router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
