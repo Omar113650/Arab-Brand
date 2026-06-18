@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import ParticleBackground from "../components/ParticleBackground";
 
 type Step = "email" | "sent";
 
@@ -44,31 +45,13 @@ export default function ForgetPasswordPage() {
         padding: "1.5rem",
         position: "relative",
         overflow: "hidden",
+        background: "#07070F",
+        color: "#EAE6DE",
+        fontFamily: "Tajawal,sans-serif"
       }}
     >
       {/* bg — same as Login/Register */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        <div
-          style={{
-            position: "absolute",
-            top: "20%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 500,
-            height: 400,
-            background: "radial-gradient(ellipse,#C9973A09,transparent 70%)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage:
-              "linear-gradient(#1E1E2E22 1px,transparent 1px),linear-gradient(90deg,#1E1E2E22 1px,transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-      </div>
+      <ParticleBackground />
 
       <div
         className="fade-up"

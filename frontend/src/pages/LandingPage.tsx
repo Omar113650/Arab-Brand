@@ -282,7 +282,7 @@ export default function LandingPage() {
         } else {
           /* نجوم صغيرة = نقطة بسيطة */
           ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.arc(s.x, s.y, Math.max(0, s.r), 0, Math.PI * 2);
           ctx.fillStyle = s.gold
             ? `rgba(232,196,106,${alpha})`
             : `rgba(255,255,255,${alpha * 0.8})`;
@@ -329,13 +329,13 @@ export default function LandingPage() {
         const pulsedR = p.r + Math.sin(p.pulse) * 0.5;
         const pulsedO = p.o + Math.sin(p.pulse * 0.7) * 0.08;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, pulsedR, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, Math.max(0, pulsedR), 0, Math.PI * 2);
         ctx.fillStyle = p.gold ? `rgba(212,168,71,${pulsedO})` : `rgba(139,92,246,${pulsedO * 0.6})`;
         ctx.fill();
         /* glow ring on gold particles */
         if (p.gold && p.r > 1.2) {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, pulsedR * 3, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, Math.max(0, pulsedR * 3), 0, Math.PI * 2);
           ctx.fillStyle = `rgba(212,168,71,${pulsedO * 0.06})`;
           ctx.fill();
         }
