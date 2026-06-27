@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://arab-brand.vercel.app/",
+        target: "https://arab-brand-4qj7.vercel.app/",
         changeOrigin: true,
       },
     },
