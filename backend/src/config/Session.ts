@@ -6,14 +6,15 @@ export const sessionMiddleware = session({
   resave:            false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl:       process.env.MONGO_URI!,
+    mongoUrl:    process.env.MONGO_URI!,
     collectionName: "sessions",
-    ttl:            7 * 24 * 60 * 60,
+    ttl:         7 * 24 * 60 * 60, 
   }),
   cookie: {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === "production", // true على production
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // ← التغيير المهم
-    maxAge:   7 * 24 * 60 * 60 * 1000,
+    secure:   process.env.NODE_ENV === "production",
+    // sameSite: "strict",
+    sameSite: "strict",
+    maxAge:   7 * 24 * 60 * 60 * 1000, 
   },
 });
