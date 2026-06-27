@@ -11,7 +11,14 @@ import {
   resendOtp,
 } from "../modules/auth/AuthController";
 
+console.log("✅ AUTH ROUTER LOADED");
+
 const router = Router();
+
+router.use((req, res, next) => {
+  console.log(`➡️ ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 router.post("/register", register);
 router.post("/login", login);
@@ -37,6 +44,8 @@ router.get(
     session: true,
   }),
   (req: any, res) => {
+    console.log("✅ Google callback reached");
+
     req.session.userId = req.user._id.toString();
     req.session.userRole = req.user.role;
 
@@ -50,4 +59,5 @@ router.get(
     });
   }
 );
+
 export default router;

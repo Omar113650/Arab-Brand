@@ -113,6 +113,7 @@ import {
   deleteProject,
   generateExtraSocial,
   regenerateSection,
+  CountProject
 } from "./project.controller";
 
 const router = Router();
@@ -120,12 +121,14 @@ const router = Router();
 // ── Apply auth middleware to all routes ──
 router.use(protect);
 
+router.get("/count", CountProject);
 // ── Core project routes ──
 router.post("/",          createProject);
 router.get("/",           getProjects);
 router.get("/:id",        getProjectStatus);
 router.get("/:id/result", getProjectResult);
 router.delete("/:id",     deleteProject);
+
 
 // ── Extra content (paid) ──
 router.post("/:id/extra-social", generateExtraSocial);

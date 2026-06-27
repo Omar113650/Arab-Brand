@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 /* ─────────────────────────────────────────────
    TYPES
@@ -75,12 +75,6 @@ const NEWS = [
   { date: "أبريل 2026", tag: "إنجاز", title: "+1000 براند عربي اتولّد بـ EG Brand", desc: "وصلنا لألف براند عربي! شكراً لكل مَن وثق في EG Brand لبناء هويته." },
 ];
 
-const STATS = [
-  { target: 1000, suffix: "+", label: "براند اتولّد" },
-  { target: 17,   suffix: "",  label: "مخرجات بالـ AI" },
-  { target: 1,    suffix: " دقيقة", label: "وقت التوليد" },
-];
-
 /* ─────────────────────────────────────────────
    HOOK: counter animation
 ───────────────────────────────────────────── */
@@ -113,6 +107,20 @@ function StatCounter({ target, suffix, label, started }: { target: number; suffi
       <div style={{ fontSize: ".72rem", color: "#2E2B40", marginTop: 4, letterSpacing: ".5px" }}>{label}</div>
     </div>
   );
+}
+
+/* ─────────────────────────────────────────────
+   HOOK: جلب عدد المشاريع
+───────────────────────────────────────────── */
+function useProjectCount() {
+  const [count, setCount] = useState<number>(0);
+  useEffect(() => {
+    fetch("/api/projects/count", { credentials: "include" })
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then(({ count }) => setCount(count))
+      .catch(() => {});
+  }, []);
+  return count;
 }
 
 /* ─────────────────────────────────────────────
@@ -151,9 +159,17 @@ function BrandSkeleton() {
 export default function LandingPage() {
   const [billing, setBilling] = useState<BillingCycle>("monthly");
   const { brands, loading } = useRealBrands();
+  const projectCount = useProjectCount();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [statsStarted, setStatsStarted] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
+
+  // ← STATS دلوقتي بتاخد العدد الحقيقي من الـ API
+  const STATS = useMemo(() => [
+    { target: projectCount, suffix: "+", label: "براند اتولّد" },
+    { target: 17,           suffix: "",  label: "مخرجات بالـ AI" },
+    { target: 1,            suffix: " دقيقة", label: "وقت التوليد" },
+  ], [projectCount]);
 
   /* ── ADVANCED CANVAS: particles + glowing lines + waves + orbs ── */
   useEffect(() => {
@@ -184,7 +200,6 @@ export default function LandingPage() {
       gold: Math.random() > 0.6,
     }));
 
-    /* glowing lines (connection lines between nearby particles) */
     const drawLines = () => {
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -206,7 +221,6 @@ export default function LandingPage() {
       }
     };
 
-    /* wave lines */
     const drawWaves = () => {
       for (let w = 0; w < 3; w++) {
         ctx.beginPath();
@@ -225,7 +239,6 @@ export default function LandingPage() {
       }
     };
 
-    /* ── STARS ── */
     const stars = Array.from({ length: 500 }, () => ({
       x: Math.random() * W(),
       y: Math.random() * H(),
@@ -233,28 +246,23 @@ export default function LandingPage() {
       o: Math.random() * 0.8 + 0.15,
       twinkleSpeed: Math.random() * 0.025 + 0.008,
       twinkleOffset: Math.random() * Math.PI * 2,
-      /* نجوم ذهبية أو بيضاء */
       gold: Math.random() > 0.75,
-      /* نجوم بتتحرك بوضوح */
       dx: (Math.random() - 0.5) * 0.6,
       dy: (Math.random() - 0.5) * 0.5,
     }));
 
-    /* نجمة 4 أشعة (sparkle star) */
     const drawSparkle = (x: number, y: number, size: number, alpha: number, gold: boolean) => {
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = gold ? "#E8C46A" : "#ffffff";
       ctx.lineWidth = size * 0.4;
       ctx.lineCap = "round";
-      /* شعاعين متقاطعين */
       ctx.beginPath();
       ctx.moveTo(x - size, y); ctx.lineTo(x + size, y);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(x, y - size); ctx.lineTo(x, y + size);
       ctx.stroke();
-      /* شعاعين مائلين أخف */
       ctx.globalAlpha = alpha * 0.4;
       ctx.lineWidth = size * 0.25;
       const d = size * 0.55;
@@ -272,26 +280,19 @@ export default function LandingPage() {
         s.x += s.dx; s.y += s.dy;
         if (s.x < 0) s.x = W(); if (s.x > W()) s.x = 0;
         if (s.y < 0) s.y = H(); if (s.y > H()) s.y = 0;
-
         const twinkle = 0.5 + 0.5 * Math.sin(t * s.twinkleSpeed + s.twinkleOffset);
         const alpha = s.o * twinkle;
-
         if (s.r > 0.7) {
-          /* نجوم كبيرة = sparkle */
           drawSparkle(s.x, s.y, s.r * 2.5, alpha, s.gold);
         } else {
-          /* نجوم صغيرة = نقطة بسيطة */
           ctx.beginPath();
           ctx.arc(s.x, s.y, Math.max(0, s.r), 0, Math.PI * 2);
-          ctx.fillStyle = s.gold
-            ? `rgba(232,196,106,${alpha})`
-            : `rgba(255,255,255,${alpha * 0.8})`;
+          ctx.fillStyle = s.gold ? `rgba(232,196,106,${alpha})` : `rgba(255,255,255,${alpha * 0.8})`;
           ctx.fill();
         }
       });
     };
 
-    /* floating orbs */
     const orbs = [
       { x: 0.2, y: 0.3, r: 160, color: "212,168,71", speed: 0.0008 },
       { x: 0.8, y: 0.6, r: 120, color: "139,92,246", speed: 0.0012 },
@@ -315,12 +316,10 @@ export default function LandingPage() {
     const draw = () => {
       t++;
       ctx.clearRect(0, 0, W(), H());
-
       drawOrbs();
       drawWaves();
       drawLines();
       drawStars();
-
       particles.forEach(p => {
         p.x += p.dx; p.y += p.dy;
         p.pulse += 0.03;
@@ -332,7 +331,6 @@ export default function LandingPage() {
         ctx.arc(p.x, p.y, Math.max(0, pulsedR), 0, Math.PI * 2);
         ctx.fillStyle = p.gold ? `rgba(212,168,71,${pulsedO})` : `rgba(139,92,246,${pulsedO * 0.6})`;
         ctx.fill();
-        /* glow ring on gold particles */
         if (p.gold && p.r > 1.2) {
           ctx.beginPath();
           ctx.arc(p.x, p.y, Math.max(0, pulsedR * 3), 0, Math.PI * 2);
@@ -340,7 +338,6 @@ export default function LandingPage() {
           ctx.fill();
         }
       });
-
       animId = requestAnimationFrame(draw);
     };
     draw();
@@ -406,6 +403,13 @@ export default function LandingPage() {
         @keyframes badgeSlide { from{opacity:0;transform:translateY(-12px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes statPop { from{opacity:0;transform:scale(.8) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
 
+  @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+
+
+
+
+
         .fu-badge { animation: badgeSlide .5s .05s cubic-bezier(.34,1.56,.64,1) both }
         .fu1 { animation: textReveal .7s .15s cubic-bezier(.16,1,.3,1) both }
         .fu2 { animation: textReveal .7s .3s cubic-bezier(.16,1,.3,1) both }
@@ -416,7 +420,6 @@ export default function LandingPage() {
         * { box-sizing:border-box; margin:0; padding:0; }
         ::selection { background:#D4A84733; }
 
-        /* FEAT CARDS */
         .feat-card { transition: all .4s cubic-bezier(.34,1.2,.64,1) !important; }
         .feat-card:hover {
           border-color:rgba(212,168,71,.3) !important;
@@ -432,7 +435,6 @@ export default function LandingPage() {
           box-shadow: 0 0 20px rgba(212,168,71,.2) !important;
         }
 
-        /* STEP CARDS */
         .step-item { transition: all .35s cubic-bezier(.34,1.2,.64,1) !important; }
         .step-item:hover {
           border-color: rgba(212,168,71,.3) !important;
@@ -446,7 +448,6 @@ export default function LandingPage() {
           box-shadow: 0 0 20px rgba(212,168,71,.3) !important;
         }
 
-        /* BRAND CARDS */
         .brand-card { transition: all .35s cubic-bezier(.34,1.56,.64,1) !important; }
         .brand-card:hover {
           background: #13131E !important;
@@ -454,12 +455,10 @@ export default function LandingPage() {
           box-shadow: 0 10px 30px rgba(0,0,0,.3) !important;
         }
 
-        /* PLAN CARDS */
         .plan-card { transition: all .4s cubic-bezier(.34,1.56,.64,1) !important; }
         .plan-card:hover { transform: translateY(-10px) scale(1.02) !important; }
         .plan-card:hover .plan-cta { transform: translateY(-1px) !important; opacity: .9 !important; }
 
-        /* NEWS CARDS */
         .news-card { transition: all .35s cubic-bezier(.34,1.2,.64,1) !important; }
         .news-card:hover {
           border-color: rgba(212,168,71,.3) !important;
@@ -468,7 +467,6 @@ export default function LandingPage() {
           background: linear-gradient(145deg,#10101D,#13132A) !important;
         }
 
-        /* TEAM CARDS */
         .team-card { transition: all .35s cubic-bezier(.34,1.2,.64,1) !important; }
         .team-card:hover {
           border-color: rgba(212,168,71,.3) !important;
@@ -476,7 +474,6 @@ export default function LandingPage() {
           box-shadow: 0 12px 36px rgba(0,0,0,.3) !important;
         }
 
-        /* TESTIMONIAL CARDS */
         .testimonial-card { transition: all .35s cubic-bezier(.34,1.2,.64,1) !important; }
         .testimonial-card:hover {
           border-color: rgba(212,168,71,.25) !important;
@@ -484,7 +481,6 @@ export default function LandingPage() {
           box-shadow: 0 16px 48px rgba(0,0,0,.3) !important;
         }
 
-        /* CTA BUTTON breathing */
         .cta-btn-main {
           animation: ctaBreathe 3s ease-in-out infinite;
           background-size: 200% auto !important;
@@ -495,11 +491,7 @@ export default function LandingPage() {
           box-shadow: 0 20px 60px rgba(212,168,71,.45) !important;
         }
 
-        /* section underline indicator */
-        .section-underline {
-          display: inline-block;
-          position: relative;
-        }
+        .section-underline { display: inline-block; position: relative; }
         .section-underline::after {
           content: '';
           position: absolute;
@@ -534,12 +526,10 @@ export default function LandingPage() {
       {/* ══════════ HERO ══════════ */}
       <section style={{ minHeight: "calc(100vh - 64px)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "6rem 1.5rem 4rem", position: "relative", overflow: "hidden" }}>
 
-        {/* multi orbs */}
         <div style={{ position:"absolute", top:"-15%", left:"50%", width:600, height:500, background:"radial-gradient(ellipse,rgba(212,168,71,.10),transparent 65%)", filter:"blur(50px)", pointerEvents:"none", animation:"orbFloat 9s ease-in-out infinite" }} />
         <div style={{ position:"absolute", bottom:"5%", right:"3%", width:320, height:320, background:"radial-gradient(circle,rgba(139,92,246,.09),transparent 70%)", filter:"blur(35px)", pointerEvents:"none", animation:"orbFloat2 11s ease-in-out infinite" }} />
         <div style={{ position:"absolute", top:"20%", left:"8%", width:200, height:200, background:"radial-gradient(circle,rgba(212,168,71,.06),transparent 70%)", filter:"blur(25px)", pointerEvents:"none", animation:"orbFloat3 13s ease-in-out infinite" }} />
 
-        {/* grid */}
         <div style={{ position:"absolute", inset:0, pointerEvents:"none", backgroundImage:"linear-gradient(rgba(212,168,71,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,71,.03) 1px,transparent 1px)", backgroundSize:"56px 56px", maskImage:"radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)", WebkitMaskImage:"radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)" }} />
 
         <div style={{ maxWidth: 660, position: "relative", zIndex: 1 }}>
@@ -582,25 +572,122 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════ REAL BRANDS ══════════ */}
-      <section style={{ padding:"4rem 1.5rem", maxWidth:940, margin:"0 auto", ...revealStyle }} className="reveal">
-        <div style={{ textAlign:"center", marginBottom:"2.25rem" }}>
-          <p style={sectionLabelStyle}>براندات اتولّدت فعلاً</p>
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:".625rem" }}>
-          {loading
-            ? Array.from({ length: 6 }).map((_, i) => <BrandSkeleton key={i} />)
-            : brands.length === 0
-              ? <div style={{ gridColumn:"1/-1", textAlign:"center", color:"#2E2B40", padding:"2rem", fontSize:".85rem" }}>لا توجد براندات بعد — كن أول من يبني هويته!</div>
-              : brands.map((b, i) => (
-                <div key={i} className="brand-card" style={{ background:"#0D0D1C", border:"1px solid rgba(255,255,255,.06)", borderRight:`3px solid ${b.color}`, borderRadius:12, padding:"1rem 1.25rem", display:"flex", alignItems:"center", gap:12, cursor:"default" }}>
-                  <div style={{ width:8, height:8, borderRadius:"50%", background:b.color, boxShadow:`0 0 10px ${b.color}`, flexShrink:0, animation:"glowPulse 2s ease-in-out infinite" }} />
-                  <div style={{ fontFamily:"Sora,sans-serif", fontWeight:700, fontSize:".92rem", color:"#EAE6DE" }}>{b.name}</div>
-                </div>
-              ))
-          }
-        </div>
-      </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{/* ══════════ REAL BRANDS MARQUEE ══════════ */}
+<section style={{ padding: "4rem 0" }} className="reveal">
+  <div style={{ textAlign: "center", marginBottom: "2.25rem" }}>
+    <p style={sectionLabelStyle}>براندات اتولّدت فعلاً</p>
+  </div>
+
+  <div style={{ position: "relative", overflow: "hidden" }}>
+    {/* Fade edges */}
+    <div style={{
+      position: "absolute", top: 0, left: 0, bottom: 0, width: 80, zIndex: 2,
+      background: "linear-gradient(to right, #080816, transparent)", pointerEvents: "none"
+    }} />
+    <div style={{
+      position: "absolute", top: 0, right: 0, bottom: 0, width: 80, zIndex: 2,
+      background: "linear-gradient(to left, #080816, transparent)", pointerEvents: "none"
+    }} />
+
+    {loading ? (
+      <div style={{ display: "flex", gap: 12, padding: "0 1rem" }}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} style={{
+            background: "#0D0D1C",
+            border: "1px solid rgba(255,255,255,.06)",
+            borderRadius: 10,
+            padding: ".75rem 1.1rem",
+            width: 180,
+            height: 40,
+            flexShrink: 0,
+            opacity: 0.4,
+          }} />
+        ))}
+      </div>
+    ) : brands.length === 0 ? (
+      <div style={{ textAlign: "center", color: "rgba(255,255,255,.3)", padding: "2rem", fontSize: ".85rem" }}>
+        لا توجد براندات بعد — كن أول من يبني هويته!
+      </div>
+    ) : (
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          width: "max-content",
+          animation: "marquee 22s linear infinite",
+        }}
+        onMouseEnter={e => (e.currentTarget.style.animationPlayState = "paused")}
+        onMouseLeave={e => (e.currentTarget.style.animationPlayState = "running")}
+      >
+        {[...brands, ...brands].map((b, i) => (
+          <div key={i} style={{
+            background: "#0D0D1C",
+            border: "1px solid rgba(255,255,255,.06)",
+            borderRight: `3px solid ${b.color}`,
+            borderRadius: 10,
+            padding: ".75rem 1.1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}>
+            <div style={{
+              width: 8, height: 8, borderRadius: "50%",
+              background: b.color,
+              boxShadow: `0 0 10px ${b.color}`,
+              flexShrink: 0,
+              animation: "glowPulse 2s ease-in-out infinite",
+            }} />
+            <div style={{ fontFamily: "Sora,sans-serif", fontWeight: 700, fontSize: ".9rem", color: "#EAE6DE" }}>
+              {b.name.length > 28 ? b.name.slice(0, 28) + "…" : b.name}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {/* ══════════ FEATURES ══════════ */}
       <section id="features" style={{ ...sectionStyle, ...revealStyle }} className="reveal">
@@ -694,7 +781,7 @@ export default function LandingPage() {
             <p style={{ fontSize:".92rem", color:"#6B6480", lineHeight:1.9, marginBottom:"1.5rem" }}>EG Brand منصة مصرية بتستخدم الذكاء الاصطناعي علشان تساعد أصحاب المشاريع والشركات الصغيرة في السوق العربي إنهم يبنوا هويتهم البصرية بسهولة وبسرعة وبجودة احترافية.</p>
             <p style={{ fontSize:".92rem", color:"#6B6480", lineHeight:1.9, marginBottom:"2rem" }}>فريقنا بيؤمن إن كل فكرة تستحق هوية قوية، وإن التسويق الاحترافي مش حكر على الشركات الكبيرة.</p>
             <div style={{ display:"flex", gap:"2rem", flexWrap:"wrap" }}>
-              {[["2024","سنة التأسيس"],["15+","عضو في الفريق"],["6","دول عربية"]].map(([n,l])=>(
+              {[["2026","سنة التأسيس"],["+","عضو في الفريق"],["3","دول عربية"]].map(([n,l])=>(
                 <div key={l} style={{ animation:"float1 4s ease-in-out infinite" }}>
                   <div style={{ fontFamily:"Sora,sans-serif", fontSize:"1.5rem", fontWeight:800, background:"linear-gradient(135deg,#E8C46A,#D4A847)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{n}</div>
                   <div style={{ fontSize:".75rem", color:"#2E2B40", marginTop:2 }}>{l}</div>
@@ -749,7 +836,7 @@ export default function LandingPage() {
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1";(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}
           >إرسال الرسالة ✦</button>
           <div style={{ display:"flex", gap:"2rem", justifyContent:"center", marginTop:"2rem", flexWrap:"wrap" }}>
-            {[{icon:"📧",label:"support@egbrand.io"},{icon:"💬",label:"واتساب: +20 xxx xxx xxxx"}].map((c,i)=>(
+            {[{icon:"📧",label:"eg.brand.dev@gmail.com"},{icon:"💬",label:"واتساب: +20 1095496184"}].map((c,i)=>(
               <div key={i} style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".82rem", color:"#6B6480" }}>
                 <span>{c.icon}</span><span>{c.label}</span>
               </div>

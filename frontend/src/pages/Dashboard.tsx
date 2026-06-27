@@ -6578,7 +6578,6 @@
 
 
 
-
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import ParticleBackground from "../components/ParticleBackground";
@@ -6877,7 +6876,7 @@ export default function Dashboard() {
               lineHeight: 1.1,
             }}
           >
-            EG Brand
+            {/* EG Brand */}
           </span>
           <span style={{ fontFamily: "Tajawal, sans-serif", fontSize: "10px", fontWeight: 500, color: "#5A5270", letterSpacing: "0.5px", lineHeight: 1 }}></span>
         </div>

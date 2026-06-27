@@ -941,7 +941,11 @@ export const regenerateSection = asyncHandler(
   },
 );
 
-
+export const CountProject = asyncHandler(async (req: Request, res: Response) => {
+  // بيعد الكل مش بس للـ user ده
+  const count = await Project.countDocuments({ status: "completed" });
+  res.status(200).json({ count });
+});
 
 
 
