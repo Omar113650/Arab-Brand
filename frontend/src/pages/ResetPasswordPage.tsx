@@ -10,6 +10,7 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const navigate = useNavigate();
   const { userId, token } = useParams();
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
