@@ -6578,6 +6578,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import ParticleBackground from "../components/ParticleBackground";
+import { apiFetch } from "../lib/api";
 
 const STYLES = [
   { id: "modern", ar: "عصري", en: "Modern" },
@@ -6645,14 +6646,14 @@ export default function Dashboard() {
   useEffect(() => {
     const init = async () => {
       try {
-        const userRes = await fetch("/api/auth/me");
+        const userRes = await apiFetch("/api/auth/me");
         if (!userRes.ok) {
           navigate("/login");
           return;
         }
         const userData = await userRes.json();
         setUser(userData.user);
-        const projRes = await fetch("/api/projects");
+        const projRes = await apiFetch("/api/projects");
         if (projRes.ok) {
           const projData = await projRes.json();
           setProjects(projData.projects || []);
@@ -6681,7 +6682,7 @@ export default function Dashboard() {
     setErr("");
 
     try {
-      const res = await fetch("/api/projects", {
+      const res = await apiFetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idea, customBrandName: bname, selectedStyle: style, selectedColors: cols }),
@@ -6716,7 +6717,7 @@ export default function Dashboard() {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     pollTimerRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/projects/${projectId}`);
+        const res = await apiFetch(`/api/projects/${projectId}`);
         if (!res.ok) return;
         const data = await res.json();
         const { status } = data.project;
@@ -6727,7 +6728,7 @@ export default function Dashboard() {
           setPhase(4);
           setTimeout(async () => {
             try {
-              const resultRes = await fetch(`/api/projects/${projectId}/result`);
+              const resultRes = await apiFetch(`/api/projects/${projectId}/result`);
               if (!resultRes.ok) { setErr("فشل تحميل نتائج البراند"); setView("wizard"); return; }
               const resultData = await resultRes.json();
               const success = safeSetResult(resultData);
@@ -6746,7 +6747,7 @@ export default function Dashboard() {
 
   const fetchProjectsList = async () => {
     try {
-      const res = await fetch("/api/projects");
+      const res = await apiFetch("/api/projects");
       if (res.ok) { const data = await res.json(); setProjects(data.projects || []); }
     } catch (e) { console.error(e); }
   };
@@ -6754,7 +6755,7 @@ export default function Dashboard() {
   const handleViewResult = async (projId: string) => {
     setLoading(true);
     try {
-      const resultRes = await fetch(`/api/projects/${projId}/result`);
+      const resultRes = await apiFetch(`/api/projects/${projId}/result`);
       if (!resultRes.ok) { alert("فشل تحميل هذا المشروع"); return; }
       const resultData = await resultRes.json();
       const success = safeSetResult(resultData);
@@ -6773,7 +6774,7 @@ export default function Dashboard() {
     setDeleteConfirmId(null);
     setDeletingId(projId);
     try {
-      const res = await fetch(`/api/projects/${projId}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/projects/${projId}`, { method: "DELETE" });
       if (res.ok) { setProjects((prev) => prev.filter((p) => p._id !== projId)); }
       else { const data = await res.json(); alert(data.message || "فشل حذف المشروع"); }
     } catch (e) { alert("خطأ في الاتصال"); }
@@ -6781,7 +6782,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
-    try { await fetch("/api/auth/logout", { method: "POST" }); navigate("/login"); }
+    try { await apiFetch("/api/auth/logout", { method: "POST" }); navigate("/login"); }
     catch (e) { console.error(e); }
   };
 
@@ -7484,7 +7485,7 @@ function SocialTab({ social, displayName, projectId, onSocialUpdate }: { social:
     setGenerating(true);
     setGenMsg("جاري توليد محتوى إضافي...");
     try {
-      const res = await fetch(`/api/projects/${projectId}/extra-social`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/extra-social`, { method: "POST" });
       const data = await res.json();
       if (!res.ok) { setGenMsg(data.message || "فشل التوليد"); }
       else { setGenMsg(`✓ تم التوليد! رصيدك المتبقي: ${data.creditsLeft}`); onSocialUpdate?.(data.social); setTimeout(() => setGenMsg(""), 3000); }
@@ -8099,7 +8100,7 @@ function LaunchPlanTab({ data, projectId, primary, onGenerated }: { data: any; p
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/regenerate/launchPlan`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/regenerate/launchPlan`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل التوليد"); }
       else { onGenerated(json.launchPlan); setMsg("✓ تم إعادة التوليد"); setTimeout(() => setMsg(""), 3000); }
@@ -8173,7 +8174,7 @@ function SwotTab({ data, projectId, primary, onGenerated }: { data: any; project
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/regenerate/swot`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/regenerate/swot`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل التوليد"); }
       else { onGenerated(json.swot); setMsg("✓ تم إعادة التوليد"); setTimeout(() => setMsg(""), 3000); }
@@ -8253,7 +8254,7 @@ function ObjectionsTab({ data, projectId, primary, onGenerated }: { data: any; p
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/regenerate/objections`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/regenerate/objections`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل التوليد"); }
       else { onGenerated(json.objections); setMsg("✓ تم إعادة التوليد"); setTimeout(() => setMsg(""), 3000); }
@@ -8306,7 +8307,7 @@ function BuyerPersonaTab({ data, projectId, primary, onGenerated }: { data: any;
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/generate/buyer-persona`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/generate/buyer-persona`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل"); }
       else { onGenerated(json.buyerPersona); setMsg(`✓ تم! رصيدك: ${json.creditsLeft}`); setTimeout(() => setMsg(""), 3000); }
@@ -8370,7 +8371,7 @@ function AdScriptsTab({ data, projectId, primary, onGenerated }: { data: any; pr
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/generate/ad-scripts`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/generate/ad-scripts`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل"); }
       else { onGenerated(json.adScripts); setMsg(`✓ تم! رصيدك: ${json.creditsLeft}`); setTimeout(() => setMsg(""), 3000); }
@@ -8418,7 +8419,7 @@ function EmailCampaignTab({ data, projectId, primary, onGenerated }: { data: any
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/generate/email-campaign`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/generate/email-campaign`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل"); }
       else { onGenerated(json.emailCampaign); setMsg(`✓ تم! رصيدك: ${json.creditsLeft}`); setTimeout(() => setMsg(""), 3000); }
@@ -8469,7 +8470,7 @@ function BusinessOverviewTab({ data, projectId, primary, onGenerated }: { data: 
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/regenerate/businessOverview`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/regenerate/businessOverview`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل التوليد"); }
       else { onGenerated(json.businessOverview); setMsg("✓ تم إعادة التوليد"); setTimeout(() => setMsg(""), 3000); }
@@ -8502,7 +8503,7 @@ function AgePreferencesTab({ data, projectId, primary, onGenerated }: { data: an
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/regenerate/agePreferences`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/regenerate/agePreferences`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل التوليد"); }
       else { onGenerated(json.agePreferences); setMsg("✓ تم إعادة التوليد"); setTimeout(() => setMsg(""), 3000); }
@@ -8563,7 +8564,7 @@ function FaqTab({ data, projectId, primary, onGenerated }: { data: any; projectI
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/regenerate/faq`, { method: "POST" });
+      const res = await apiFetch(`/api/projects/${projectId}/regenerate/faq`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) { setMsg(json.message || "فشل التوليد"); }
       else { onGenerated(json.faq); setMsg("✓ تم إعادة التوليد"); setTimeout(() => setMsg(""), 3000); }

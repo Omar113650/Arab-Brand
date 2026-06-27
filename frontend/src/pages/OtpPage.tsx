@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ParticleBackground from "../components/ParticleBackground";
+import { apiFetch } from "../lib/api";
 
 export default function OtpPage() {
   const [otp, setOtp] = useState("");
@@ -18,9 +19,9 @@ export default function OtpPage() {
     setLoading(true);
     setErr("");
     try {
-      const res = await fetch("/api/auth/verify-otp", {
+      const res = await apiFetch("/api/auth/verify-otp", {
         method: "POST",
-        credentials: "include",
+        // credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
       });
@@ -39,7 +40,7 @@ export default function OtpPage() {
     setErr("");
     setSuccess("");
     try {
-      const res = await fetch("/api/auth/resend-otp", {
+      const res = await apiFetch("/api/auth/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

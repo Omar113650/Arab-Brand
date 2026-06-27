@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-
+import { apiFetch } from "../lib/api";
 /* ─────────────────────────────────────────────
    TYPES
 ───────────────────────────────────────────── */
@@ -115,7 +115,7 @@ function StatCounter({ target, suffix, label, started }: { target: number; suffi
 function useProjectCount() {
   const [count, setCount] = useState<number>(0);
   useEffect(() => {
-    fetch("/api/projects/count", { credentials: "include" })
+    apiFetch("/api/projects/count", { credentials: "include" })
       .then((r) => r.ok ? r.json() : Promise.reject())
       .then(({ count }) => setCount(count))
       .catch(() => {});
@@ -131,7 +131,7 @@ function useRealBrands() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const c = new AbortController();
-    fetch("/api/projects", { credentials: "include", signal: c.signal })
+    apiFetch("/api/projects", {  signal: c.signal })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(({ projects }) => {
         setBrands((projects as any[])
