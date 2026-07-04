@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { apiFetch } from "../lib/api";
+import { useTranslation } from "react-i18next";
+import i18n from "i18next";
+
 /* ─────────────────────────────────────────────
    TYPES
 ───────────────────────────────────────────── */
@@ -10,71 +12,9 @@ type Brand = { name: string; category: string; color: string };
 /* ─────────────────────────────────────────────
    STATIC DATA
 ───────────────────────────────────────────── */
-const FEATURES = [
-  { icon: "🎨", title: "الهوية البصرية",    desc: "هوية بصرية متكاملة تعبّر عن روح براندك بدقة" },
-  { icon: "🏷️", title: "الشعار",            desc: "لوجو SVG احترافي قابل للتعديل بدون فقدان الجودة" },
-  { icon: "📱", title: "السوشيال ميديا",     desc: "منشورات Instagram و TikTok و Twitter جاهزة للنشر" },
-  { icon: "🌐", title: "صفحة الهبوط",        desc: "Landing Page HTML كاملة جاهزة للرفع فوراً" },
-  { icon: "📄", title: "البروشور",           desc: "بروشور احترافي جاهز للطباعة والمشاركة" },
-  { icon: "💼", title: "بطاقة العمل",        desc: "بطاقة عمل أنيقة تعكس هويتك المهنية" },
-  { icon: "🚀", title: "خطة الإطلاق",        desc: "خطة إطلاق مدروسة خطوة بخطوة لضمان النجاح" },
-  { icon: "📊", title: "تحليل SWOT",         desc: "تحليل شامل لنقاط القوة والضعف والفرص والتهديدات" },
-  { icon: "💬", title: "الاعتراضات",         desc: "ردود جاهزة على اعتراضات العملاء المحتملين" },
-  { icon: "👤", title: "العميل المثالي",      desc: "بروفايل تفصيلي لجمهورك المستهدف" },
-  { icon: "🎬", title: "سكريبت إعلان",       desc: "سكريبت إعلاني جذاب يحول المشاهد لعميل" },
-  { icon: "📧", title: "حملة إيميل",         desc: "سلسلة إيميلات تسويقية مصممة للتحويل" },
-  { icon: "🔍", title: "تحليل المنافسين",     desc: "دراسة معمقة للمنافسين وكيف تتميز عنهم" },
-  { icon: "🏢", title: "شرح البيزنس",        desc: "عرض تقديمي واضح لفكرة مشروعك" },
-  { icon: "🎯", title: "تفضيلات الأجيال",     desc: "استراتيجية مخصصة لكل شريحة عمرية في السوق" },
-  { icon: "❓", title: "الأسئلة الشائعة",     desc: "FAQ جاهز يجيب على كل أسئلة عملائك" },
-  { icon: "🌍", title: "جوجل",               desc: "تهيئة SEO واستراتيجية ظهور على محركات البحث" },
-];
-
-const STEPS = [
-  { n: "01", title: "أدخل فكرتك",  desc: "صف مشروعك أو براندك بكلماتك العادية" },
-  { n: "02", title: "اختر أسلوبك", desc: "اختر الألوان والأسلوب البصري المناسب" },
-  { n: "03", title: "الـ AI يعمل", desc: "AI يولّد هويتك الكاملة خلال دقيقة" },
-  { n: "04", title: "حمّل وابدأ",  desc: "حمّل كل ملفاتك وابدأ براندك فوراً" },
-];
-
 const CATEGORY_COLORS = [
   "#C9813A","#1A56DB","#0E9F6E","#9333EA","#0891B2","#D97706","#E11D48","#059669","#7C3AED",
 ];
-
-const PLANS = [
-  {
-    name: "مجاني", monthlyPrice: "0", yearlyPrice: "0",
-    period: "دائماً", yearlyNote: "", color: "#1E1E2E", badge: undefined,
-    features: ["3 براندات شهرياً","الشعار SVG","الهوية البصرية","Brand Score"],
-    missing: ["السوشيال ميديا","صفحة الهبوط","البروشور","Export ZIP"],
-    cta: "ابدأ مجاناً",
-  },
-  {
-    name: "Pro", monthlyPrice: "29", yearlyPrice: "19",
-    period: "شهرياً", yearlyNote: "توفّر $120 سنوياً", color: "#C9973A", badge: "الأشهر",
-    features: ["براندات غير محدودة","الشعار SVG","الهوية البصرية","Brand Score","السوشيال ميديا","صفحة الهبوط","البروشور","بطاقة العمل","خطة الإطلاق","تحليل SWOT","Export ZIP"],
-    missing: [], cta: "جرّب Pro",
-  },
-  {
-    name: "Business", monthlyPrice: "79", yearlyPrice: "55",
-    period: "شهرياً", yearlyNote: "توفّر $288 سنوياً", color: "#7C3AED", badge: "للشركات",
-    features: ["براندات غير محدودة","شعار + AI Variations","هوية موسّعة","Brand Score + تقرير PDF","سوشيال (30 منشور/شهر)","صفحات هبوط متعددة","بروشور + كتالوج","بطاقة عمل","خطة إطلاق","SWOT + تحليل منافسين","سكريبت إعلان","حملة إيميل","تهيئة جوجل","العميل المثالي","Export ZIP","White Label","أولوية في الدعم"],
-    missing: [], cta: "ابدأ Business",
-  },
-];
-
-const TESTIMONIALS = [
-  { name: "أحمد السيد", role: "مؤسس كافيه الصفا", text: "EG Brand غيّر تصوري للكليشة إنه محتاج شركة تسويق كاملة. في أقل من دقيقة عندي لوجو وهوية وصفحة هبوط احترافية.", avatar: "أس", color: "#C9813A" },
-  { name: "سارة المنصور", role: "مديرة تك ستوديو", text: "الـ SWOT والعميل المثالي اللي الـ AI ولّدهم كانوا أدق من تقرير استشاري دفعنا فيه آلاف. مفاجأة حقيقية!", avatar: "سم", color: "#7C3AED" },
-  { name: "محمد الغامدي", role: "صاحب ميدا كلينيك", text: "سكريبت الإعلان والحملة الإيميلية حولوا معدل التحويل عندنا بشكل ملحوظ جداً. أنصح كل صاحب مشروع.", avatar: "مغ", color: "#0E9F6E" },
-];
-
-const NEWS = [
-  { date: "يونيو 2026", tag: "ميزة جديدة", title: "إطلاق تحليل المنافسين بالذكاء الاصطناعي", desc: "الآن يقدر EG Brand يحلل منافسيك ويقدملك استراتيجية تميّز مخصصة." },
-  { date: "مايو 2026", tag: "تحديث", title: "سكريبت الإعلان وحملة الإيميل متاحين للجميع", desc: "بعد طلبات كتير، أضفنا سكريبت الإعلان وحملة الإيميل لكل خطط Pro وBusiness." },
-  { date: "أبريل 2026", tag: "إنجاز", title: "+1000 براند عربي اتولّد بـ EG Brand", desc: "وصلنا لألف براند عربي! شكراً لكل مَن وثق في EG Brand لبناء هويته." },
-];
-
 /* ─────────────────────────────────────────────
    HOOK: counter animation
 ───────────────────────────────────────────── */
@@ -115,7 +55,7 @@ function StatCounter({ target, suffix, label, started }: { target: number; suffi
 function useProjectCount() {
   const [count, setCount] = useState<number>(0);
   useEffect(() => {
-    apiFetch("/api/projects/count", { credentials: "include" })
+    fetch("/api/projects/count", { credentials: "include" })
       .then((r) => r.ok ? r.json() : Promise.reject())
       .then(({ count }) => setCount(count))
       .catch(() => {});
@@ -131,13 +71,13 @@ function useRealBrands() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const c = new AbortController();
-    apiFetch("/api/projects", {  signal: c.signal })
+    fetch("/api/projects", { credentials: "include", signal: c.signal })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(({ projects }) => {
         setBrands((projects as any[])
           .filter((p: any) => p.status === "completed" && (p.customBrandName || p.projectTitle))
           .slice(0, 6)
-          .map((p: any, i: number) => ({ name: p.customBrandName || p.projectTitle, category: p.selectedStyle || "براند", color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] })));
+          .map((p: any, i: number) => ({ name: p.customBrandName || p.projectTitle, category: p.selectedStyle || t("txt_357"), color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] })));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -157,6 +97,63 @@ function BrandSkeleton() {
    MAIN
 ───────────────────────────────────────────── */
 export default function LandingPage() {
+    const { t } = useTranslation();
+    const FEATURES = [
+      { icon: "🎨", title: t("txt_464"),    desc: t("txt_463") },
+      { icon: "🏷️", title: t("txt_462"),            desc: t("txt_461") },
+      { icon: "📱", title: t("txt_460"),     desc: t("txt_459") },
+      { icon: "🌐", title: t("txt_458"),        desc: t("txt_457") },
+      { icon: "📄", title: t("txt_456"),           desc: t("txt_455") },
+      { icon: "💼", title: t("txt_454"),        desc: t("txt_453") },
+      { icon: "🚀", title: t("txt_452"),        desc: t("txt_451") },
+      { icon: "📊", title: t("txt_450"),         desc: t("txt_449") },
+      { icon: "💬", title: t("txt_448"),         desc: t("txt_447") },
+      { icon: "👤", title: t("txt_446"),      desc: t("txt_445") },
+      { icon: "🎬", title: t("txt_444"),       desc: t("txt_443") },
+      { icon: "📧", title: t("txt_442"),         desc: t("txt_441") },
+      { icon: "🔍", title: t("txt_440"),     desc: t("txt_439") },
+      { icon: "🏢", title: t("txt_438"),        desc: t("txt_437") },
+      { icon: "🎯", title: t("txt_436"),     desc: t("txt_435") },
+      { icon: "❓", title: t("txt_434"),     desc: t("txt_433") },
+      { icon: "🌍", title: t("txt_432"),               desc: t("txt_431") },
+    ];
+    const STEPS = [
+      { n: "01", title: t("txt_430"),  desc: t("txt_429") },
+      { n: "02", title: t("txt_428"), desc: t("txt_427") },
+      { n: "03", title: t("txt_426"), desc: t("txt_425") },
+      { n: "04", title: t("txt_424"),  desc: t("txt_423") },
+    ];
+    const PLANS = [
+      {
+        name: t("txt_422"), monthlyPrice: "0", yearlyPrice: "0",
+        period: t("txt_421"), yearlyNote: "", color: "#1E1E2E", badge: undefined,
+        features: [t("txt_420"),t("txt_419"),t("txt_418"),"Brand Score"],
+        missing: [t("txt_417"),t("txt_416"),t("txt_415"),"Export ZIP"],
+        cta: t("txt_414"),
+      },
+      {
+        name: "Pro", monthlyPrice: "29", yearlyPrice: "19",
+        period: t("txt_413"), yearlyNote: t("txt_412"), color: "#C9973A", badge: t("txt_411"),
+        features: [t("txt_410"),t("txt_409"),t("txt_408"),"Brand Score",t("txt_407"),t("txt_406"),t("txt_405"),t("txt_404"),t("txt_403"),t("txt_402"),"Export ZIP"],
+        missing: [], cta: t("txt_401"),
+      },
+      {
+        name: "Business", monthlyPrice: "79", yearlyPrice: "55",
+        period: t("txt_400"), yearlyNote: t("txt_399"), color: "#7C3AED", badge: t("txt_398"),
+        features: [t("txt_397"),t("txt_396"),t("txt_395"),t("txt_394"),t("txt_393"),t("txt_392"),t("txt_391"),t("txt_390"),t("txt_389"),t("txt_388"),t("txt_387"),t("txt_386"),t("txt_385"),t("txt_384"),"Export ZIP","White Label",t("txt_383")],
+        missing: [], cta: t("txt_382"),
+      },
+    ];
+    const TESTIMONIALS = [
+      { name: t("txt_381"), role: t("txt_380"), text: t("txt_379"), avatar: t("txt_378"), color: "#C9813A" },
+      { name: t("txt_377"), role: t("txt_376"), text: t("txt_375"), avatar: t("txt_374"), color: "#7C3AED" },
+      { name: t("txt_373"), role: t("txt_372"), text: t("txt_371"), avatar: t("txt_370"), color: "#0E9F6E" },
+    ];
+    const NEWS = [
+      { date: t("txt_369"), tag: t("txt_368"), title: t("txt_367"), desc: t("txt_366") },
+      { date: t("txt_365"), tag: t("txt_364"), title: t("txt_363"), desc: t("txt_362") },
+      { date: t("txt_361"), tag: t("txt_360"), title: t("txt_359"), desc: t("txt_358") },
+    ];
   const [billing, setBilling] = useState<BillingCycle>("monthly");
   const { brands, loading } = useRealBrands();
   const projectCount = useProjectCount();
@@ -166,9 +163,9 @@ export default function LandingPage() {
 
   // ← STATS دلوقتي بتاخد العدد الحقيقي من الـ API
   const STATS = useMemo(() => [
-    { target: projectCount, suffix: "+", label: "براند اتولّد" },
-    { target: 17,           suffix: "",  label: "مخرجات بالـ AI" },
-    { target: 1,            suffix: " دقيقة", label: "وقت التوليد" },
+    { target: projectCount, suffix: "+", label: t("txt_356") },
+    { target: 17,           suffix: "",  label: t("txt_355") },
+    { target: 1,            suffix: t("txt_354"), label: t("txt_353") },
   ], [projectCount]);
 
   /* ── ADVANCED CANVAS: particles + glowing lines + waves + orbs ── */
@@ -535,8 +532,8 @@ export default function LandingPage() {
         <div style={{ maxWidth: 660, position: "relative", zIndex: 1 }}>
           <div className="fu-badge" style={{ display:"inline-flex", alignItems:"center", gap:8, padding:".35rem 1rem", borderRadius:50, border:"1px solid rgba(212,168,71,.3)", background:"rgba(212,168,71,.07)", fontSize:".75rem", color:"#D4A847", marginBottom:"1.75rem", backdropFilter:"blur(8px)" }}>
             <span style={{ width:6, height:6, borderRadius:"50%", background:"#D4A847", animation:"pulse 2s ease-in-out infinite", display:"inline-block" }} />
-            مدعوم بالذكاء الاصطناعي للسوق العربي
-          </div>
+            {t("txt_322")}
+                                </div>
 
           <div style={{ overflow: "hidden", marginBottom: ".5rem" }}>
             <h1 className="fu1" style={{ fontFamily:"Sora,sans-serif", fontSize:"clamp(2.4rem,6.5vw,4rem)", fontWeight:800, lineHeight:1.05, letterSpacing:"-2.5px" }}>
@@ -546,22 +543,22 @@ export default function LandingPage() {
 
           <div style={{ overflow: "hidden", marginBottom: "1.25rem" }}>
             <div className="fu2" style={{ fontSize:"clamp(1.3rem,3.5vw,2rem)", color:"#6B6480", fontFamily:"Sora,sans-serif", fontWeight:600 }}>
-              براندك في دقيقة واحدة
-            </div>
+              {t("txt_321")}
+                                      </div>
           </div>
 
           <p className="fu3" style={{ fontSize:"1rem", color:"#4A4560", lineHeight:1.9, maxWidth:490, margin:"0 auto 2.25rem" }}>
-            من فكرة في دماغك إلى براند كامل بلوجو وهوية ومحتوى وصفحة هبوط — كل ده بالذكاء الاصطناعي خصيصاً للسوق العربي
-          </p>
+            {t("txt_320")}
+                                </p>
 
           <div className="fu4" style={{ display:"flex", gap:".75rem", justifyContent:"center", flexWrap:"wrap", marginBottom:"3rem" }}>
             <Link to="/register" className="cta-btn-main" style={{ padding:".95rem 2.25rem", borderRadius:14, background:"linear-gradient(135deg,#E8C46A,#D4A847,#C8903A)", color:"#08080F", border:"none", fontFamily:"Tajawal,sans-serif", fontWeight:700, fontSize:"1.05rem", textDecoration:"none", display:"inline-block", transition:"all .3s cubic-bezier(.34,1.56,.64,1)" }}>
-              ابدأ مجاناً ✦
-            </Link>
+              {t("txt_319")}
+                                      </Link>
             <a href="#how" style={{ padding:".95rem 2.25rem", borderRadius:14, border:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.02)", color:"#6B6480", fontFamily:"Tajawal,sans-serif", fontWeight:600, fontSize:"1rem", textDecoration:"none", transition:"all .25s", display:"inline-block", backdropFilter:"blur(8px)" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor="rgba(212,168,71,.4)"; (e.currentTarget as HTMLElement).style.color="#D4A847"; (e.currentTarget as HTMLElement).style.background="rgba(212,168,71,.05)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,.08)"; (e.currentTarget as HTMLElement).style.color="#6B6480"; (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,.02)"; }}
-            >كيف يعمل؟</a>
+            >{t("txt_318")}</a>
           </div>
 
           <div ref={statsRef} className="fu5" style={{ display:"flex", gap:"2.5rem", justifyContent:"center", flexWrap:"wrap" }}>
@@ -572,45 +569,24 @@ export default function LandingPage() {
         </div>
       </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{/* ══════════ REAL BRANDS MARQUEE ══════════ */}
+{/* ══════════ REAL BRANDS MARQUEE - FIXED ══════════ */}
 <section style={{ padding: "4rem 0" }} className="reveal">
   <div style={{ textAlign: "center", marginBottom: "2.25rem" }}>
-    <p style={sectionLabelStyle}>براندات اتولّدت فعلاً</p>
+    <p style={sectionLabelStyle}>{t("txt_317")}</p>
   </div>
 
   <div style={{ position: "relative", overflow: "hidden" }}>
-    {/* Fade edges */}
     <div style={{
-      position: "absolute", top: 0, left: 0, bottom: 0, width: 80, zIndex: 2,
+      position: "absolute", top: 0, left: 0, bottom: 0, width: 120, zIndex: 2,
       background: "linear-gradient(to right, #080816, transparent)", pointerEvents: "none"
     }} />
     <div style={{
-      position: "absolute", top: 0, right: 0, bottom: 0, width: 80, zIndex: 2,
+      position: "absolute", top: 0, right: 0, bottom: 0, width: 120, zIndex: 2,
       background: "linear-gradient(to left, #080816, transparent)", pointerEvents: "none"
     }} />
 
     {loading ? (
+      // loading state...
       <div style={{ display: "flex", gap: 12, padding: "0 1rem" }}>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} style={{
@@ -627,20 +603,22 @@ export default function LandingPage() {
       </div>
     ) : brands.length === 0 ? (
       <div style={{ textAlign: "center", color: "rgba(255,255,255,.3)", padding: "2rem", fontSize: ".85rem" }}>
-        لا توجد براندات بعد — كن أول من يبني هويته!
-      </div>
+        {t("txt_316")}
+                                    </div>
     ) : (
       <div
         style={{
           display: "flex",
           gap: 12,
           width: "max-content",
-          animation: "marquee 22s linear infinite",
+          animation: "marquee 28s linear infinite",
+          willChange: "transform",
         }}
         onMouseEnter={e => (e.currentTarget.style.animationPlayState = "paused")}
         onMouseLeave={e => (e.currentTarget.style.animationPlayState = "running")}
       >
-        {[...brands, ...brands].map((b, i) => (
+        {/* 4 نسخ مع -25% */}
+        {[...brands, ...brands, ...brands, ...brands].map((b, i) => (
           <div key={i} style={{
             background: "#0D0D1C",
             border: "1px solid rgba(255,255,255,.06)",
@@ -658,9 +636,13 @@ export default function LandingPage() {
               background: b.color,
               boxShadow: `0 0 10px ${b.color}`,
               flexShrink: 0,
-              animation: "glowPulse 2s ease-in-out infinite",
             }} />
-            <div style={{ fontFamily: "Sora,sans-serif", fontWeight: 700, fontSize: ".9rem", color: "#EAE6DE" }}>
+            <div style={{ 
+              fontFamily: "Sora, sans-serif", 
+              fontWeight: 700, 
+              fontSize: ".9rem", 
+              color: "#EAE6DE" 
+            }}>
               {b.name.length > 28 ? b.name.slice(0, 28) + "…" : b.name}
             </div>
           </div>
@@ -677,23 +659,11 @@ export default function LandingPage() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       {/* ══════════ FEATURES ══════════ */}
       <section id="features" style={{ ...sectionStyle, ...revealStyle }} className="reveal">
         <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-          <p style={sectionLabelStyle}>المميزات</p>
-          <h2 style={sectionTitleStyle}>كل اللي براندك محتاجه</h2>
+          <p style={sectionLabelStyle}>{t("txt_315")}</p>
+          <h2 style={sectionTitleStyle}>{t("txt_314")}</h2>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:"1rem" }}>
           {FEATURES.map((f, i) => (
@@ -710,8 +680,8 @@ export default function LandingPage() {
       {/* ══════════ HOW IT WORKS ══════════ */}
       <section id="how" style={{ ...sectionStyle, maxWidth:700, ...revealStyle }} className="reveal">
         <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-          <p style={sectionLabelStyle}>كيف يعمل</p>
-          <h2 style={sectionTitleStyle}>4 خطوات بس</h2>
+          <p style={sectionLabelStyle}>{t("txt_313")}</p>
+          <h2 style={sectionTitleStyle}>{t("txt_312")}</h2>
         </div>
         <div style={{ position:"relative" }}>
           <div style={{ position:"absolute", right:29, top:0, bottom:0, width:1, background:"linear-gradient(to bottom,transparent,rgba(212,168,71,.25) 20%,rgba(212,168,71,.25) 80%,transparent)", pointerEvents:"none" }} />
@@ -732,8 +702,8 @@ export default function LandingPage() {
       {/* ══════════ TESTIMONIALS ══════════ */}
       <section id="clients" style={{ ...sectionStyle, ...revealStyle }} className="reveal">
         <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-          <p style={sectionLabelStyle}>العملاء</p>
-          <h2 style={sectionTitleStyle}>بيقولوا عننا إيه؟</h2>
+          <p style={sectionLabelStyle}>{t("txt_311")}</p>
+          <h2 style={sectionTitleStyle}>{t("txt_310")}</h2>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(270px,1fr))", gap:"1rem" }}>
           {TESTIMONIALS.map((t, i) => (
@@ -755,8 +725,8 @@ export default function LandingPage() {
       {/* ══════════ NEWS ══════════ */}
       <section id="news" style={{ ...sectionStyle, ...revealStyle }} className="reveal">
         <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-          <p style={sectionLabelStyle}>الأخبار</p>
-          <h2 style={sectionTitleStyle}>آخر التحديثات</h2>
+          <p style={sectionLabelStyle}>{t("txt_309")}</p>
+          <h2 style={sectionTitleStyle}>{t("txt_308")}</h2>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(270px,1fr))", gap:"1rem" }}>
           {NEWS.map((n,i)=>(
@@ -776,12 +746,12 @@ export default function LandingPage() {
       <section id="about" style={{ ...sectionStyle, ...revealStyle }} className="reveal">
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))", gap:"3rem", alignItems:"center" }}>
           <div>
-            <p style={sectionLabelStyle}>عن الشركة</p>
-            <h2 style={{ ...sectionTitleStyle, marginBottom:"1.25rem" }}>بنبني هويات براندات عربية حقيقية</h2>
-            <p style={{ fontSize:".92rem", color:"#6B6480", lineHeight:1.9, marginBottom:"1.5rem" }}>EG Brand منصة مصرية بتستخدم الذكاء الاصطناعي علشان تساعد أصحاب المشاريع والشركات الصغيرة في السوق العربي إنهم يبنوا هويتهم البصرية بسهولة وبسرعة وبجودة احترافية.</p>
-            <p style={{ fontSize:".92rem", color:"#6B6480", lineHeight:1.9, marginBottom:"2rem" }}>فريقنا بيؤمن إن كل فكرة تستحق هوية قوية، وإن التسويق الاحترافي مش حكر على الشركات الكبيرة.</p>
+            <p style={sectionLabelStyle}>{t("txt_307")}</p>
+            <h2 style={{ ...sectionTitleStyle, marginBottom:"1.25rem" }}>{t("txt_306")}</h2>
+            <p style={{ fontSize:".92rem", color:"#6B6480", lineHeight:1.9, marginBottom:"1.5rem" }}>{t("txt_305")}</p>
+            <p style={{ fontSize:".92rem", color:"#6B6480", lineHeight:1.9, marginBottom:"2rem" }}>{t("txt_304")}</p>
             <div style={{ display:"flex", gap:"2rem", flexWrap:"wrap" }}>
-              {[["2026","سنة التأسيس"],["+","عضو في الفريق"],["3","دول عربية"]].map(([n,l])=>(
+              {[["2026",t("txt_352")],["+",t("txt_351")],["3",t("txt_350")]].map(([n,l])=>(
                 <div key={l} style={{ animation:"float1 4s ease-in-out infinite" }}>
                   <div style={{ fontFamily:"Sora,sans-serif", fontSize:"1.5rem", fontWeight:800, background:"linear-gradient(135deg,#E8C46A,#D4A847)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{n}</div>
                   <div style={{ fontSize:".75rem", color:"#2E2B40", marginTop:2 }}>{l}</div>
@@ -791,10 +761,10 @@ export default function LandingPage() {
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:".75rem" }}>
             {[
-              { icon:"🚀", title:"الرؤية", desc:"نكون المنصة الأولى للهوية البصرية في السوق العربي" },
-              { icon:"🎯", title:"المهمة", desc:"نمكّن كل صاحب مشروع من براند احترافي في دقيقة" },
-              { icon:"💡", title:"الابتكار", desc:"نستخدم أحدث تقنيات الـ AI لخدمة السوق العربي" },
-              { icon:"🤝", title:"القيم", desc:"الجودة والأمانة والاحترافية في كل تفاصيلنا" },
+              { icon:"🚀", title:t("txt_349"), desc:t("txt_348") },
+              { icon:"🎯", title:t("txt_347"), desc:t("txt_346") },
+              { icon:"💡", title:t("txt_345"), desc:t("txt_344") },
+              { icon:"🤝", title:t("txt_343"), desc:t("txt_342") },
             ].map((c,i)=>(
               <div key={i} className="team-card" style={{ background:"#0D0D1C", border:"1px solid rgba(255,255,255,.06)", borderRadius:14, padding:"1.25rem" }}>
                 <div style={{ fontSize:"1.25rem", marginBottom:".625rem" }}>{c.icon}</div>
@@ -809,24 +779,24 @@ export default function LandingPage() {
       {/* ══════════ CONTACT ══════════ */}
       <section id="contact" style={{ ...sectionStyle, maxWidth:700, ...revealStyle }} className="reveal">
         <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-          <p style={sectionLabelStyle}>اتصل بنا</p>
-          <h2 style={sectionTitleStyle}>عندك سؤال؟ احكيلنا</h2>
+          <p style={sectionLabelStyle}>{t("txt_303")}</p>
+          <h2 style={sectionTitleStyle}>{t("txt_302")}</h2>
         </div>
         <div style={{ background:"linear-gradient(145deg,#0D0D1C,#111128)", border:"1px solid rgba(212,168,71,.15)", borderRadius:24, padding:"2.5rem" }}>
           <div style={{ display:"grid", gap:"1rem", marginBottom:"1.5rem" }}>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem" }}>
-              {["الاسم","البريد الإلكتروني"].map(ph=>(
+              {[t("txt_341"),t("txt_340")].map(ph=>(
                 <input key={ph} type="text" placeholder={ph} style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:10, padding:".75rem 1rem", color:"#EAE6DE", fontSize:".87rem", fontFamily:"Tajawal,sans-serif", outline:"none", transition:"all .25s" }}
                   onFocus={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(212,168,71,.4)";(e.currentTarget as HTMLElement).style.boxShadow="0 0 0 3px rgba(212,168,71,.06)";}}
                   onBlur={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,.08)";(e.currentTarget as HTMLElement).style.boxShadow="none";}}
                 />
               ))}
             </div>
-            <input type="text" placeholder="الموضوع" style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:10, padding:".75rem 1rem", color:"#EAE6DE", fontSize:".87rem", fontFamily:"Tajawal,sans-serif", outline:"none", transition:"all .25s" }}
+            <input type="text" placeholder={t("txt_339")} style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:10, padding:".75rem 1rem", color:"#EAE6DE", fontSize:".87rem", fontFamily:"Tajawal,sans-serif", outline:"none", transition:"all .25s" }}
               onFocus={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(212,168,71,.4)";(e.currentTarget as HTMLElement).style.boxShadow="0 0 0 3px rgba(212,168,71,.06)";}}
               onBlur={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,.08)";(e.currentTarget as HTMLElement).style.boxShadow="none";}}
             />
-            <textarea rows={4} placeholder="رسالتك..." style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:10, padding:".75rem 1rem", color:"#EAE6DE", fontSize:".87rem", fontFamily:"Tajawal,sans-serif", outline:"none", resize:"vertical", transition:"all .25s" }}
+            <textarea rows={4} placeholder={t("txt_338")} style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:10, padding:".75rem 1rem", color:"#EAE6DE", fontSize:".87rem", fontFamily:"Tajawal,sans-serif", outline:"none", resize:"vertical", transition:"all .25s" }}
               onFocus={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(212,168,71,.4)";(e.currentTarget as HTMLElement).style.boxShadow="0 0 0 3px rgba(212,168,71,.06)";}}
               onBlur={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,.08)";(e.currentTarget as HTMLElement).style.boxShadow="none";}}
             />
@@ -834,9 +804,9 @@ export default function LandingPage() {
           <button className="cta-btn-main" style={{ width:"100%", padding:".95rem", background:"linear-gradient(135deg,#E8C46A,#D4A847,#C8903A)", backgroundSize:"200% auto", border:"none", borderRadius:12, color:"#08080F", fontFamily:"Tajawal,sans-serif", fontWeight:700, fontSize:"1rem", cursor:"pointer" }}
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity=".88";(e.currentTarget as HTMLElement).style.transform="translateY(-2px)";}}
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1";(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}
-          >إرسال الرسالة ✦</button>
+          >{t("txt_301")}</button>
           <div style={{ display:"flex", gap:"2rem", justifyContent:"center", marginTop:"2rem", flexWrap:"wrap" }}>
-            {[{icon:"📧",label:"eg.brand.dev@gmail.com"},{icon:"💬",label:"واتساب: +20 1095496184"}].map((c,i)=>(
+            {[{icon:"📧",label:"eg.brand.dev@gmail.com"},{icon:"💬",label:t("txt_337")}].map((c,i)=>(
               <div key={i} style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".82rem", color:"#6B6480" }}>
                 <span>{c.icon}</span><span>{c.label}</span>
               </div>
@@ -848,15 +818,15 @@ export default function LandingPage() {
       {/* ══════════ PRICING ══════════ */}
       <section id="pricing" style={{ ...sectionStyle, ...revealStyle }} className="reveal">
         <div style={{ textAlign:"center", marginBottom:"2rem" }}>
-          <p style={sectionLabelStyle}>الأسعار</p>
-          <h2 style={sectionTitleStyle}>بسيط وواضح</h2>
+          <p style={sectionLabelStyle}>{t("txt_300")}</p>
+          <h2 style={sectionTitleStyle}>{t("txt_299")}</h2>
         </div>
         <div style={{ display:"flex", justifyContent:"center", marginBottom:"2.5rem" }}>
           <div style={{ display:"inline-flex", background:"#0D0D1C", border:"1px solid rgba(255,255,255,.06)", borderRadius:12, padding:4, gap:4 }}>
             {(["monthly","yearly"] as BillingCycle[]).map(cycle => (
               <button key={cycle} onClick={() => setBilling(cycle)} style={{ padding:".5rem 1.25rem", borderRadius:9, border:"none", cursor:"pointer", fontFamily:"Tajawal,sans-serif", fontWeight:600, fontSize:".875rem", transition:"all .25s cubic-bezier(.34,1.56,.64,1)", background:billing===cycle?"#D4A847":"transparent", color:billing===cycle?"#08080F":"#6B6480", display:"inline-flex", alignItems:"center", gap:".4rem" }}>
-                {cycle==="monthly"?"شهري":"سنوي"}
-                {cycle==="yearly" && <span style={{ fontSize:".62rem", background:billing==="yearly"?"rgba(8,8,15,.2)":"rgba(212,168,71,.15)", color:billing==="yearly"?"#08080F":"#D4A847", padding:".1rem .45rem", borderRadius:5 }}>وفّر 35%</span>}
+                {cycle==="monthly"?t("txt_336"):t("txt_335")}
+                {cycle==="yearly" && <span style={{ fontSize:".62rem", background:billing==="yearly"?"rgba(8,8,15,.2)":"rgba(212,168,71,.15)", color:billing==="yearly"?"#08080F":"#D4A847", padding:".1rem .45rem", borderRadius:5 }}>{t("txt_298")}</span>}
               </button>
             ))}
           </div>
@@ -874,7 +844,7 @@ export default function LandingPage() {
                   <span style={{ fontSize:".8rem", color:"#2E2B40" }}>/{p.period}</span>
                 </div>
                 {billing==="yearly"&&p.yearlyNote&&<p style={{ fontSize:".72rem", color:"#4ADE80", marginTop:".25rem" }}>{p.yearlyNote}</p>}
-                {billing==="yearly"&&p.monthlyPrice!=="0"&&<p style={{ fontSize:".72rem", color:"#2E2B40", textDecoration:"line-through" }}>${p.monthlyPrice}/شهرياً</p>}
+                {billing==="yearly"&&p.monthlyPrice!=="0"&&<p style={{ fontSize:".72rem", color:"#2E2B40", textDecoration:"line-through" }}>${p.monthlyPrice}{t("txt_297")}</p>}
               </div>
               <div style={{ marginBottom:"1.75rem", flex:1 }}>
                 {p.features.map((f,j)=>(
@@ -905,11 +875,11 @@ export default function LandingPage() {
           <div style={{ position:"absolute", top:-60, left:"50%", transform:"translateX(-50%)", width:300, height:160, background:"radial-gradient(ellipse,rgba(212,168,71,.16),transparent 70%)", pointerEvents:"none", animation:"orbFloat 7s ease-in-out infinite" }} />
           <div style={{ position:"absolute", bottom:-40, right:-40, width:200, height:200, background:"radial-gradient(circle,rgba(139,92,246,.08),transparent 70%)", pointerEvents:"none" }} />
           <div style={{ fontSize:"2rem", marginBottom:"1rem", color:"#D4A847", animation:"sparkle 3s ease-in-out infinite" }}>✦</div>
-          <h2 style={{ fontFamily:"Sora,sans-serif", fontSize:"clamp(1.5rem,4vw,2rem)", fontWeight:700, color:"#EAE6DE", letterSpacing:"-1px", marginBottom:"1rem" }}>جاهز تبني براندك؟</h2>
-          <p style={{ fontSize:".9rem", color:"#6B6480", lineHeight:1.85, marginBottom:"1.75rem" }}>انضم لأكثر من ألف مشروع عربي بنى هويته بـ EG Brand</p>
+          <h2 style={{ fontFamily:"Sora,sans-serif", fontSize:"clamp(1.5rem,4vw,2rem)", fontWeight:700, color:"#EAE6DE", letterSpacing:"-1px", marginBottom:"1rem" }}>{t("txt_296")}</h2>
+          <p style={{ fontSize:".9rem", color:"#6B6480", lineHeight:1.85, marginBottom:"1.75rem" }}>{t("txt_295")}</p>
           <Link to="/register" className="cta-btn-main" style={{ display:"inline-block", padding:"1rem 2.5rem", borderRadius:14, background:"linear-gradient(135deg,#E8C46A,#D4A847,#C8903A)", backgroundSize:"200% auto", color:"#08080F", fontFamily:"Tajawal,sans-serif", fontWeight:700, fontSize:"1rem", textDecoration:"none", transition:"all .3s cubic-bezier(.34,1.56,.64,1)" }}>
-            ابدأ مجاناً الآن ✦
-          </Link>
+            {t("txt_294")}
+                                </Link>
         </div>
       </section>
 
@@ -929,12 +899,12 @@ export default function LandingPage() {
                 </svg>
                 <span style={{ fontFamily:"Sora,sans-serif", fontSize:"14px", fontWeight:800, background:"linear-gradient(90deg,#E8C46A,#C8903A)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>EG Brand</span>
               </div>
-              <p style={{ fontSize:".8rem", color:"#2E2B40", lineHeight:1.75 }}>منصة الهوية البصرية الأولى للسوق العربي</p>
+              <p style={{ fontSize:".8rem", color:"#2E2B40", lineHeight:1.75 }}>{t("txt_293")}</p>
             </div>
             {[
-              { title:"المنتج", links:[["#features","المميزات"],["#pricing","الأسعار"],["#how","كيف يعمل"]] },
-              { title:"الشركة", links:[["#about","عن الشركة"],["#news","الأخبار"],["#clients","العملاء"]] },
-              { title:"الدعم",  links:[["#contact","اتصل بنا"],["/login","تسجيل الدخول"],["/register","إنشاء حساب"]] },
+              { title:t("txt_334"), links:[["#features",t("txt_333")],["#pricing",t("txt_332")],["#how",t("txt_331")]] },
+              { title:t("txt_330"), links:[["#about",t("txt_329")],["#news",t("txt_328")],["#clients",t("txt_327")]] },
+              { title:t("txt_326"),  links:[["#contact",t("txt_325")],["/login",t("txt_324")],["/register",t("txt_323")]] },
             ].map(col=>(
               <div key={col.title}>
                 <h4 style={{ fontSize:".75rem", fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"#D4A847", marginBottom:"1rem" }}>{col.title}</h4>
@@ -950,11 +920,15 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ borderTop:"1px solid rgba(255,255,255,.04)", paddingTop:"1.5rem", textAlign:"center" }}>
-            <p style={{ fontSize:".72rem", color:"#2E2B40", letterSpacing:".5px" }}>© {new Date().getFullYear()} EG Brand — جميع الحقوق محفوظة</p>
+            <p style={{ fontSize:".72rem", color:"#2E2B40", letterSpacing:".5px" }}>© {new Date().getFullYear()} {t("txt_292")}</p>
           </div>
         </div>
       </footer>
     </div>
   );
+}
+
+function t(key: string): string {
+  return i18n.t(key) as string;
 }
 

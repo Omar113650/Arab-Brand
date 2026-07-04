@@ -231,28 +231,22 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-// export const getMe = asyncHandler(async (req: Request, res: Response) => {
-//   logger.info("GET ME", { userId: req.session.userId });
-//   const user = await User.findById(req.session.userId).select("-password");
-//   if (!user) {
-//     res.status(404).json({ message: "Not found" });
-//     return;
-//   }
-//   res.json({ user });
-// });
 
 
-
-
-
-export const getMe = asyncHandler(async (req: any, res: Response) => {
-  if (!req.user) {
-     res.status(401).json({
-      message: "Unauthorized",
-    });
+export const getMe = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.session.userId) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
   }
 
-  res.json({
-    user: req.user,
-  });
+  const user = await User.findById(req.session.userId).select(
+    "fullName email phone avatar provider role isVerified credits plan createdAt"
+  );
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+
+  res.json({ user });
 });

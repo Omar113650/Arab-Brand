@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function RegisterPage() {
+    const { t } = useTranslation();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -228,9 +230,9 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !email || !password)
-      return setErr("يرجاء ملء جميع الحقول");
+      return setErr(t("txt_573"));
     if (password.length < 8)
-      return setErr("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+      return setErr(t("txt_572"));
     setLoading(true);
     setErr("");
     try {
@@ -241,10 +243,10 @@ export default function RegisterPage() {
         body: JSON.stringify({ fullName, email, password }),
       });
       const data = await res.json();
-      if (!res.ok) return setErr(data.message || "خطأ في إنشاء الحساب");
+      if (!res.ok) return setErr(data.message || t("txt_571"));
       navigate("/verify-otp", { state: { email } });
     } catch {
-      setErr("خطأ في الاتصال، حاول مرة أخرى");
+      setErr(t("txt_570"));
     } finally {
       setLoading(false);
     }
@@ -258,10 +260,10 @@ export default function RegisterPage() {
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
-    if (score <= 1) return { level: 1, label: "ضعيفة", color: "#F87171" };
-    if (score === 2) return { level: 2, label: "متوسطة", color: "#FBBF24" };
-    if (score === 3) return { level: 3, label: "جيدة", color: "#34D399" };
-    return { level: 4, label: "قوية جداً", color: "#10B981" };
+    if (score <= 1) return { level: 1, label: t("txt_569"), color: "#F87171" };
+    if (score === 2) return { level: 2, label: t("txt_568"), color: "#FBBF24" };
+    if (score === 3) return { level: 3, label: t("txt_567"), color: "#34D399" };
+    return { level: 4, label: t("txt_566"), color: "#10B981" };
   };
   const strength = getStrength();
 
@@ -434,12 +436,12 @@ export default function RegisterPage() {
             marginBottom: ".375rem",
           }}
         >
-          أنشئ حسابك
-        </h1>
+          {t("txt_562")}
+                          </h1>
 
         <p style={{ fontSize: ".85rem", color: "#6B6480", marginBottom: 18 }}>
-          ابدأ رحلتك في بناء براندك العربي
-        </p>
+          {t("txt_561")}
+                          </p>
 
         {/* GOOGLE REGISTER */}
         <a
@@ -481,8 +483,8 @@ export default function RegisterPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          التسجيل بـ Google
-        </a>
+          {t("txt_560")}
+                          </a>
 
         {/* DIVIDER */}
         <div
@@ -508,8 +510,8 @@ export default function RegisterPage() {
               whiteSpace: "nowrap",
             }}
           >
-            أو بالإيميل
-          </span>
+            {t("txt_559")}
+                                </span>
           <div
             style={{
               flex: 1,
@@ -524,12 +526,12 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit}>
           {/* Full Name */}
           <div style={{ marginBottom: 12 }}>
-            <label className="input-label">الاسم الكامل</label>
+            <label className="input-label">{t("txt_558")}</label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="محمد أحمد"
+              placeholder={t("txt_565")}
               className="reg-input"
               style={{
                 width: "100%",
@@ -557,7 +559,7 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div style={{ marginBottom: 12 }}>
-            <label className="input-label">البريد الإلكتروني</label>
+            <label className="input-label">{t("txt_557")}</label>
             <input
               type="email"
               value={email}
@@ -591,12 +593,12 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div style={{ marginBottom: 6 }}>
-            <label className="input-label">كلمة المرور</label>
+            <label className="input-label">{t("txt_556")}</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="8 أحرف على الأقل"
+              placeholder={t("txt_564")}
               className="reg-input"
               style={{
                 width: "100%",
@@ -718,10 +720,10 @@ export default function RegisterPage() {
                     animation: "spin .8s linear infinite",
                   }}
                 />
-                جاري إنشاء الحساب...
-              </>
+                {t("txt_555")}
+                                            </>
             ) : (
-              "إنشاء الحساب ✦"
+              t("txt_563")
             )}
           </button>
 
@@ -734,7 +736,7 @@ export default function RegisterPage() {
               lineHeight: 1.7,
             }}
           >
-            بالتسجيل أنت توافق على{" "}
+            {t("txt_554")}{" "}
             <a
               href="#"
               style={{
@@ -743,9 +745,9 @@ export default function RegisterPage() {
                 transition: "color .2s",
               }}
             >
-              شروط الاستخدام
-            </a>{" "}
-            و{" "}
+              {t("txt_553")}
+                                      </a>{" "}
+            {t("txt_552")}{" "}
             <a
               href="#"
               style={{
@@ -754,8 +756,8 @@ export default function RegisterPage() {
                 transition: "color .2s",
               }}
             >
-              سياسة الخصوصية
-            </a>
+              {t("txt_551")}
+                                      </a>
           </p>
         </form>
 
@@ -767,7 +769,7 @@ export default function RegisterPage() {
             marginTop: 16,
           }}
         >
-          عندك حساب بالفعل؟{" "}
+          {t("txt_550")}{" "}
           <Link
             to="/login"
             style={{
@@ -776,8 +778,8 @@ export default function RegisterPage() {
               textDecoration: "none",
             }}
           >
-            سجّل الدخول
-          </Link>
+            {t("txt_549")}
+                                </Link>
         </p>
       </div>
 

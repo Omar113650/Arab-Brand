@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ParticleBackground from "../components/ParticleBackground";
-import { apiFetch } from "../lib/api";
+import { useTranslation } from "react-i18next";
 
 export default function OtpPage() {
+    const { t } = useTranslation();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -15,21 +16,21 @@ export default function OtpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp) return setErr("يرجاء إدخال الكود");
+    if (!otp) return setErr(t("txt_493"));
     setLoading(true);
     setErr("");
     try {
-      const res = await apiFetch("/api/auth/verify-otp", {
+      const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
-        // credentials: "include",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
       });
       const data = await res.json();
-      if (!res.ok) return setErr(data.message || "كود غلط");
+      if (!res.ok) return setErr(data.message || t("txt_492"));
       navigate("/dashboard");
     } catch {
-      setErr("خطأ في الاتصال، حاول مرة أخرى");
+      setErr(t("txt_491"));
     } finally {
       setLoading(false);
     }
@@ -40,16 +41,16 @@ export default function OtpPage() {
     setErr("");
     setSuccess("");
     try {
-      const res = await apiFetch("/api/auth/resend-otp", {
+      const res = await fetch("/api/auth/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok) return setErr(data.message || "حدث خطأ");
-      setSuccess("تم إرسال كود جديد ");
+      if (!res.ok) return setErr(data.message || t("txt_490"));
+      setSuccess(t("txt_489"));
     } catch {
-      setErr("خطأ في الاتصال");
+      setErr(t("txt_488"));
     } finally {
       setResendLoading(false);
     }
@@ -90,19 +91,19 @@ export default function OtpPage() {
           </div>
 
           <h1 style={{ fontFamily: "Sora,sans-serif", fontSize: "1.5rem", fontWeight: 700, color: "#F0EDE6", marginBottom: ".375rem" }}>
-            تحقق من إيميلك
-          </h1>
+            {t("txt_484")}
+                                </h1>
           <p style={{ fontSize: ".82rem", color: "#8A8498", marginBottom: "1.75rem", lineHeight: 1.6 }}>
-            بعتنالك كود مكون من 6 أرقام على
-            <br />
+            {t("txt_483")}
+                                  <br />
             <span style={{ color: "#C9973A", fontWeight: 600 }}>{email}</span>
           </p>
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", fontSize: ".75rem", fontWeight: 700, color: "#6B6478", letterSpacing: "1px", textTransform: "uppercase", marginBottom: ".5rem" }}>
-                كود التحقق
-              </label>
+                {t("txt_482")}
+                                            </label>
               <input
                 type="text"
                 value={otp}
@@ -133,26 +134,26 @@ export default function OtpPage() {
               style={{ width: "100%", padding: "1rem", background: loading ? "#8A6A28" : "#C9973A", color: "#08080F", border: "none", borderRadius: 12, fontFamily: "Tajawal,sans-serif", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", boxShadow: "0 6px 24px #C9973A28", transition: "all .2s", display: "flex", alignItems: "center", justifyContent: "center", gap: ".5rem" }}
             >
               {loading ? (
-                <><div style={{ width: 16, height: 16, border: "2px solid #08080F44", borderTop: "2px solid #08080F", borderRadius: "50%", animation: "spin 1s linear infinite" }} />جاري التحقق...</>
-              ) : "تحقق من الكود ←"}
+                <><div style={{ width: 16, height: 16, border: "2px solid #08080F44", borderTop: "2px solid #08080F", borderRadius: "50%", animation: "spin 1s linear infinite" }} />{t("txt_481")}</>
+              ) : t("txt_487")}
             </button>
           </form>
 
           <p style={{ textAlign: "center", fontSize: ".82rem", color: "#3A3650", marginTop: "1.25rem" }}>
-            مش وصلك الكود؟{" "}
+            {t("txt_480")}{" "}
             <button
               onClick={handleResend}
               disabled={resendLoading}
               style={{ background: "none", border: "none", color: "#C9973A", fontWeight: 700, fontSize: ".82rem", cursor: resendLoading ? "not-allowed" : "pointer", fontFamily: "Tajawal,sans-serif", padding: 0 }}
             >
-              {resendLoading ? "جاري الإرسال..." : "إرسال مرة أخرى"}
+              {resendLoading ? t("txt_486") : t("txt_485")}
             </button>
           </p>
 
           <p style={{ textAlign: "center", fontSize: ".82rem", color: "#3A3650", marginTop: ".75rem" }}>
             <Link to="/login" style={{ color: "#C9973A", textDecoration: "none", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: ".3rem" }}>
-              ← رجوع لتسجيل الدخول
-            </Link>
+              {t("txt_479")}
+                                      </Link>
           </p>
         </div>
       </div>

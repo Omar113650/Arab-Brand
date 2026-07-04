@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function LoginPage() {
+    const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -208,7 +210,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErr("يرجاء ملء جميع الحقول");
+      setErr(t("txt_478"));
       return;
     }
     setLoading(true);
@@ -222,12 +224,12 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setErr(data.message || "خطأ في تسجيل الدخول");
+        setErr(data.message || t("txt_477"));
         return;
       }
       navigate("/dashboard");
     } catch {
-      setErr("خطأ في الاتصال، حاول مرة أخرى");
+      setErr(t("txt_476"));
     } finally {
       setLoading(false);
     }
@@ -313,11 +315,11 @@ export default function LoginPage() {
         </div>
 
         <h1 style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "Sora, sans-serif", marginBottom: ".375rem" }}>
-          مرحباً بعودتك
-        </h1>
+          {t("txt_475")}
+                          </h1>
         <p style={{ fontSize: ".85rem", color: "#6B6480", marginBottom: 18 }}>
-          سجّل دخولك وكمّل بناء براندك
-        </p>
+          {t("txt_474")}
+                          </p>
 
         <a
           href="/api/auth/google"
@@ -336,17 +338,17 @@ export default function LoginPage() {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          الدخول بـ Google
-        </a>
+          {t("txt_473")}
+                          </a>
         <div style={{ display: "flex", alignItems: "center", gap: ".75rem", marginBottom: "1.25rem" }}>
           <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(212,168,71,.15), transparent)" }} />
-          <span style={{ fontSize: ".72rem", color: "#3A3650", whiteSpace: "nowrap" }}>أو بالإيميل</span>
+          <span style={{ fontSize: ".72rem", color: "#3A3650", whiteSpace: "nowrap" }}>{t("txt_472")}</span>
           <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(212,168,71,.15), transparent)" }} />
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 12 }}>
-            <label className="input-label">البريد الإلكتروني</label>
+            <label className="input-label">{t("txt_471")}</label>
             <input
               type="email"
               value={email}
@@ -365,10 +367,10 @@ export default function LoginPage() {
 
           <div style={{ marginBottom: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: ".5rem" }}>
-              <label className="input-label">كلمة المرور</label>
+              <label className="input-label">{t("txt_470")}</label>
               <Link to="/forget-password" style={{ color: "#C9973A", fontSize: ".72rem", textDecoration: "none" }}>
-                نسيت كلمة المرور؟
-              </Link>
+                {t("txt_469")}
+                                            </Link>
             </div>
             <input
               type="password"
@@ -409,19 +411,19 @@ export default function LoginPage() {
             {loading ? (
               <span style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
                 <div style={{ width: 16, height: 16, border: "2px solid #08080F44", borderTop: "2px solid #08080F", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
-                جاري الدخول...
-              </span>
+                {t("txt_468")}
+                                            </span>
             ) : (
-              <span>تسجيل الدخول ✦</span>
+              <span>{t("txt_467")}</span>
             )}
           </button>
         </form>
 
         <p style={{ textAlign: "center", fontSize: ".82rem", color: "#6B6480", marginTop: 16 }}>
-          مش عندك حساب؟{" "}
+          {t("txt_466")}{" "}
           <Link to="/register" style={{ color: "#C9973A", fontWeight: 700, textDecoration: "none" }}>
-            سجّل دلوقتي
-          </Link>
+            {t("txt_465")}
+                                </Link>
         </p>
       </div>
 

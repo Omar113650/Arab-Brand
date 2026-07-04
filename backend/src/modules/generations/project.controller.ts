@@ -1,467 +1,12 @@
-// // ده اللي شغال وتمام 
 
-// import { Request, Response } from "express";
-// import asyncHandler from "express-async-handler";
-// import Project from "../../models/project.model";
-// import Result from "../../models/result.model";
-// import User from "../../models/user.model";
-// import { generateFullBrandKit } from "./ai.service";
-
-// /* ── Create Project ── */
-// export const createProject = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const { idea, customBrandName, selectedStyle, selectedColors } = req.body;
-
-//     if (!idea || !selectedStyle) {
-//       res.status(400).json({ message: "idea و selectedStyle مطلوبين" });
-//       return;
-//     }
-
-//     const userId = req.session.userId!;
-
-//     const project = await Project.create({
-//       userId,
-//       projectTitle: customBrandName || idea.slice(0, 40),
-//       idea,
-//       customBrandName,
-//       selectedStyle,
-//       selectedColors: selectedColors || [],
-//       status: "generating",
-//     });
-
-//     /* ── Background AI Generation ── */
-//     const runGeneration = async () => {
-//       const startTime = Date.now();
-//       try {
-//         const brandKit = await generateFullBrandKit({
-//           idea,
-//           brandName: customBrandName,
-//           style: selectedStyle,
-//           colors: selectedColors || [],
-//         });
-
-//         console.log("BRAND KIT keys =>", Object.keys(brandKit));
-
-//         await Result.create({
-//           userId,
-//           projectId: project._id,
-//           brandIdentity: brandKit.brand,
-//           logo: brandKit.logo || "",
-//           socialMedia: brandKit.social || {},
-//           landingPage: brandKit.landing || {},
-//           brochure: {},
-//           brochureContent: brandKit.brochureContent || {},
-//           competitors: brandKit.competitors || {},
-//           objections: brandKit.objections || {},
-//           productFocus: brandKit.productFocus || {},
-//           launchPlan: brandKit.launchPlan || {},
-//           swot: brandKit.swot || {},
-//           ageSegments: brandKit.ageSegments || {}, // ← جديد
-//           scores: brandKit.brand?.score || {},
-//         });
-
-//         project.status = "completed";
-//         project.generationTime = Math.round((Date.now() - startTime) / 1000);
-//         await project.save();
-
-//         await User.findByIdAndUpdate(userId, { $inc: { credits: -1 } });
-
-//         console.log("✅ Project completed:", project._id);
-//       } catch (err: any) {
-//         console.error("❌ AI Generation failed for project:", project._id);
-//         console.error("❌ Error name:", err?.name);
-//         console.error("❌ Error message:", err?.message);
-//         console.error("❌ Error stack:", err?.stack);
-
-//         if (err?.status === 429 || err?.code === "rate_limit_exceeded") {
-//           console.error("❌ Cause: Groq rate limit exceeded");
-//         }
-//         if (err?.message?.includes("HF") || err?.message?.includes("FLUX")) {
-//           console.error("❌ Cause: Hugging Face / FLUX error");
-//         }
-
-//         project.status = "failed";
-//         project.failureReason = err?.message || "Unknown AI error";
-//         await project.save();
-//       }
-//     };
-
-//     runGeneration();
-
-//     res.status(201).json({
-//       message: "تم بدء عملية توليد البراند بنجاح",
-//       projectId: project._id,
-//     });
-//   },
-// );
-
-// /* ── Get All Projects ── */
-// export const getProjects = asyncHandler(async (req: Request, res: Response) => {
-//   const userId = req.session.userId!;
-//   const projects = await Project.find({ userId }).sort({ createdAt: -1 });
-//   res.status(200).json({ projects });
-// });
-
-// /* ── Get Project Status ── */
-// export const getProjectStatus = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const userId = req.session.userId!;
-//     const project = await Project.findOne({ _id: req.params.id, userId });
-
-//     if (!project) {
-//       res
-//         .status(404)
-//         .json({ message: "المشروع غير موجود أو لا تملك صلاحية الوصول إليه" });
-//       return;
-//     }
-
-//     if (project.status === "failed") {
-//       res.status(422).json({
-//         status: "failed",
-//         message: "فشل توليد هذا البراند",
-//         reason: project.failureReason || "خطأ غير معروف - راجع الـ server logs",
-//       });
-//       return;
-//     }
-
-//     res.status(200).json({ project });
-//   },
-// );
-
-// /* ── Delete Project ── */
-// export const deleteProject = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const userId = req.session.userId!;
-
-//     const project = await Project.findOneAndDelete({
-//       _id: req.params.id,
-//       userId,
-//     });
-//     if (!project) {
-//       res.status(404).json({ message: "المشروع غير موجود" });
-//       return;
-//     }
-
-//     await Result.deleteOne({ projectId: req.params.id, userId });
-//     res.status(200).json({ message: "تم حذف المشروع" });
-//   },
-// );
-
-// /* ── Get Project Result ── */
-// export const getProjectResult = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const userId = req.session.userId!;
-
-//     const project = await Project.findOne({ _id: req.params.id, userId });
-//     if (!project) {
-//       res.status(404).json({ message: "المشروع غير موجود" });
-//       return;
-//     }
-
-//     if (project.status === "generating") {
-//       res.status(202).json({ message: "جاري توليد البراند حالياً" });
-//       return;
-//     }
-
-//     if (project.status === "failed") {
-//       res.status(422).json({
-//         message: "فشل توليد هذا البراند",
-//         reason: project.failureReason || "خطأ غير معروف",
-//       });
-//       return;
-//     }
-
-//     const result = await Result.findOne({ projectId: project._id, userId });
-//     if (!result) {
-//       res.status(404).json({ message: "لم يتم العثور على نتائج لهذا المشروع" });
-//       return;
-//     }
-
-//     // ── Backfill missing sections for older projects ──
-//     const needsCompetitors =
-//       !result.competitors || Object.keys(result.competitors || {}).length === 0;
-//     const needsBrochure =
-//       !result.brochureContent ||
-//       Object.keys(result.brochureContent || {}).length === 0;
-//     const needsObjections =
-//       !result.objections || Object.keys(result.objections || {}).length === 0;
-//     const needsProductFocus =
-//       !result.productFocus ||
-//       Object.keys(result.productFocus || {}).length === 0;
-//     const needsLaunchPlan =
-//       !result.launchPlan || Object.keys(result.launchPlan || {}).length === 0;
-//     const needsSwot =
-//       !result.swot || Object.keys(result.swot || {}).length === 0;
-//     const needsAgeSegments = // ← جديد
-//       !("ageSegments" in result) ||
-//       Object.keys((result as any).ageSegments || {}).length === 0;
-
-//     if (
-//       needsCompetitors ||
-//       needsBrochure ||
-//       needsObjections ||
-//       needsProductFocus ||
-//       needsLaunchPlan ||
-//       needsSwot ||
-//       needsAgeSegments // ← جديد
-//     ) {
-//       try {
-//         const updates: Record<string, any> = {};
-//         const {
-//           generateCompetitorsOnly,
-//           generateBrochureOnly,
-//           generateObjectionsOnly,
-//           generateProductFocusOnly,
-//           generateLaunchPlanOnly,
-//           generateSwotOnly,
-//           generateAgeSegmentsOnly, // ← جديد
-//         } = await import("./ai.service");
-
-//         const brandCtx = {
-//           idea: project.idea,
-//           brandName:
-//             project.customBrandName ||
-//             result.brandIdentity?.recommendedName ||
-//             "",
-//           audience: result.brandIdentity?.strategy?.audience || "",
-//           positioning: result.brandIdentity?.strategy?.positioning || "",
-//           value: result.brandIdentity?.strategy?.value || "",
-//           tagline: result.brandIdentity?.tagline?.ar || "",
-//           messages: result.brandIdentity?.messages || [],
-//           style: project.selectedStyle,
-//         };
-
-//         const backfillTasks = await Promise.allSettled([
-//           needsCompetitors
-//             ? generateCompetitorsOnly(brandCtx).then(
-//                 (r) => r && (updates.competitors = r),
-//               )
-//             : Promise.resolve(),
-//           needsBrochure
-//             ? generateBrochureOnly(brandCtx).then(
-//                 (r) => r && (updates.brochureContent = r),
-//               )
-//             : Promise.resolve(),
-//           needsObjections
-//             ? generateObjectionsOnly(brandCtx).then(
-//                 (r) => r && (updates.objections = r),
-//               )
-//             : Promise.resolve(),
-//           needsProductFocus
-//             ? generateProductFocusOnly(brandCtx).then(
-//                 (r) => r && (updates.productFocus = r),
-//               )
-//             : Promise.resolve(),
-//           needsLaunchPlan
-//             ? generateLaunchPlanOnly(brandCtx).then(
-//                 (r) => r && (updates.launchPlan = r),
-//               )
-//             : Promise.resolve(),
-//           needsSwot
-//             ? generateSwotOnly(brandCtx).then((r) => r && (updates.swot = r))
-//             : Promise.resolve(),
-//           needsAgeSegments // ← جديد
-//             ? generateAgeSegmentsOnly(brandCtx).then(
-//                 (r) => r && (updates.ageSegments = r),
-//               )
-//             : Promise.resolve(),
-//         ]);
-
-//         backfillTasks.forEach((t, i) => {
-//           if (t.status === "rejected")
-//             console.error(`❌ Backfill task ${i} failed:`, t.reason);
-//         });
-
-//         if (Object.keys(updates).length > 0) {
-//           await Result.findByIdAndUpdate(result._id, updates);
-//           Object.assign(result, updates);
-//         }
-//       } catch (err: any) {
-//         console.error("❌ Background enrichment failed:", err?.message);
-//       }
-//     }
-
-//     res.status(200).json({ result });
-//   },
-// );
-
-// /* ── Generate Extra Social Content (paid) ── */
-// export const generateExtraSocial = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const userId = req.session.userId!;
-
-//     const user = await User.findById(userId);
-//     if (!user || user.credits < 1) {
-//       res
-//         .status(402)
-//         .json({ message: "رصيدك غير كافٍ. يرجى شحن رصيدك للمتابعة." });
-//       return;
-//     }
-
-//     const project = await Project.findOne({ _id: req.params.id, userId });
-//     if (!project) {
-//       res.status(404).json({ message: "المشروع غير موجود" });
-//       return;
-//     }
-
-//     const result = await Result.findOne({ projectId: project._id, userId });
-//     if (!result) {
-//       res.status(404).json({ message: "نتائج المشروع غير موجودة" });
-//       return;
-//     }
-
-//     const { generateExtraSocialContent } = await import("./ai.service");
-
-//     const extra = await generateExtraSocialContent({
-//       idea: project.idea,
-//       brandName:
-//         project.customBrandName || result.brandIdentity?.recommendedName || "",
-//       style: project.selectedStyle,
-//       tagline: result.brandIdentity?.tagline?.ar || "",
-//       audience: result.brandIdentity?.strategy?.audience || "",
-//       value: result.brandIdentity?.strategy?.value || "",
-//     });
-
-//     const cur = result.socialMedia || {};
-//     const updated = {
-//       ...cur,
-//       contentMap: cur.contentMap || [],
-//       postIdeas: [...(cur.postIdeas || []), ...(extra.postIdeas || [])],
-//       videoIdeas: [...(cur.videoIdeas || []), ...(extra.videoIdeas || [])],
-//       instagram: [...(cur.instagram || []), ...(extra.instagram || [])],
-//       twitter: [...(cur.twitter || []), ...(extra.twitter || [])],
-//     };
-
-//     await Result.findByIdAndUpdate(result._id, { socialMedia: updated });
-//     await User.findByIdAndUpdate(userId, { $inc: { credits: -1 } });
-
-//     res.status(200).json({
-//       message: "تم توليد محتوى إضافي بنجاح",
-//       social: updated,
-//       creditsLeft: user.credits - 1,
-//     });
-//   },
-// );
-
-// /* ── Regenerate Single Section ── */
-// export const regenerateSection = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const userId = req.session.userId!;
-//     const section = req.params.section as string;
-
-//     const allowedSections = [
-//       "objections",
-//       "productFocus",
-//       "launchPlan",
-//       "swot",
-//       "competitors",
-//       "brochureContent",
-//       "ageSegments", // ← جديد
-//     ];
-//     if (!allowedSections.includes(section)) {
-//       res.status(400).json({ message: "قسم غير مدعوم للإعادة" });
-//       return;
-//     }
-
-//     const project = await Project.findOne({ _id: req.params.id, userId });
-//     if (!project) {
-//       res.status(404).json({ message: "المشروع غير موجود" });
-//       return;
-//     }
-
-//     const result = await Result.findOne({ projectId: project._id, userId });
-//     if (!result) {
-//       res.status(404).json({ message: "نتائج المشروع غير موجودة" });
-//       return;
-//     }
-
-//     const {
-//       generateObjectionsOnly,
-//       generateProductFocusOnly,
-//       generateLaunchPlanOnly,
-//       generateSwotOnly,
-//       generateCompetitorsOnly,
-//       generateBrochureOnly,
-//       generateAgeSegmentsOnly, // ← جديد
-//     } = await import("./ai.service");
-
-//     const brandCtx = {
-//       idea: project.idea,
-//       brandName:
-//         project.customBrandName || result.brandIdentity?.recommendedName || "",
-//       audience: result.brandIdentity?.strategy?.audience || "",
-//       positioning: result.brandIdentity?.strategy?.positioning || "",
-//       value: result.brandIdentity?.strategy?.value || "",
-//       tagline: result.brandIdentity?.tagline?.ar || "",
-//       messages: result.brandIdentity?.messages || [],
-//       style: project.selectedStyle,
-//     };
-
-//     let newData: any = null;
-
-//     switch (section) {
-//       case "objections":
-//         newData = await generateObjectionsOnly(brandCtx);
-//         break;
-//       case "productFocus":
-//         newData = await generateProductFocusOnly(brandCtx);
-//         break;
-//       case "launchPlan":
-//         newData = await generateLaunchPlanOnly(brandCtx);
-//         break;
-//       case "swot":
-//         newData = await generateSwotOnly(brandCtx);
-//         break;
-//       case "competitors":
-//         newData = await generateCompetitorsOnly(brandCtx);
-//         break;
-//       case "brochureContent":
-//         newData = await generateBrochureOnly(brandCtx);
-//         break;
-//       case "ageSegments": // ← جديد
-//         newData = await generateAgeSegmentsOnly(brandCtx);
-//         break;
-//     }
-
-//     if (!newData) {
-//       res.status(500).json({ message: "فشل توليد القسم المطلوب" });
-//       return;
-//     }
-
-//     await Result.findByIdAndUpdate(result._id, { [section]: newData });
-
-//     res.status(200).json({
-//       message: `تم إعادة توليد قسم ${section} بنجاح`,
-//       [section]: newData,
-//     });
-//   },
-// );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// اليوم اخر نسخه عملتها يوم 6/9
-// وده تمام وشغال 
 
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import Project from "../../models/project.model";
 import Result from "../../models/result.model";
 import User from "../../models/user.model";
-import { generateFullBrandKit } from "./ai.service";
+import { generateFullBrandKit } from "../../Ai/ai.service";
+
 
 /* ── Create Project ── */
 export const createProject = asyncHandler(
@@ -474,6 +19,25 @@ export const createProject = asyncHandler(
     }
 
     const userId = req.session.userId!;
+
+    /* ── Daily Limit (2 Projects Per Day) ── */
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const projectsToday = await Project.countDocuments({
+      userId,
+      createdAt: {
+        $gte: startOfDay,
+      },
+    });
+
+    if (projectsToday >= 2) {
+      res.status(429).json({
+        message:
+          "لقد وصلت إلى الحد الأقصى لتوليد المشاريع اليوم (مشروعان فقط). حاول مرة أخرى غدًا.",
+      });
+      return;
+    }
 
     const project = await Project.create({
       userId,
@@ -488,6 +52,7 @@ export const createProject = asyncHandler(
     /* ── Background AI Generation ── */
     const runGeneration = async () => {
       const startTime = Date.now();
+
       try {
         const brandKit = await generateFullBrandKit({
           idea,
@@ -501,29 +66,31 @@ export const createProject = asyncHandler(
         await Result.create({
           userId,
           projectId: project._id,
-          brandIdentity:    brandKit.brand,
-          logo:             brandKit.logo || "",
-          socialMedia:      brandKit.social || {},
-          landingPage:      brandKit.landing || {},
-          brochure:         {},
-          brochureContent:  brandKit.brochureContent || {},
-          competitors:      brandKit.competitors || {},
-          objections:       brandKit.objections || {},
-          productFocus:     brandKit.productFocus || {},
-          launchPlan:       brandKit.launchPlan || {},
-          swot:             brandKit.swot || {},
-          ageSegments:      brandKit.ageSegments || {},
-          businessOverview: brandKit.businessOverview || {}, // ← جديد
-          agePreferences:   brandKit.agePreferences || {},   // ← جديد
-          faq:              brandKit.faq || {},              // ← جديد
-          scores:           brandKit.brand?.score || {},
+          brandIdentity: brandKit.brand,
+          logo: brandKit.logo || "",
+          socialMedia: brandKit.social || {},
+          landingPage: brandKit.landing || {},
+          brochure: {},
+          brochureContent: brandKit.brochureContent || {},
+          competitors: brandKit.competitors || {},
+          objections: brandKit.objections || {},
+          productFocus: brandKit.productFocus || {},
+          launchPlan: brandKit.launchPlan || {},
+          swot: brandKit.swot || {},
+          ageSegments: brandKit.ageSegments || {},
+          businessOverview: brandKit.businessOverview || {},
+          agePreferences: brandKit.agePreferences || {},
+          faq: brandKit.faq || {},
+          scores: brandKit.brand?.score || {},
         });
 
         project.status = "completed";
         project.generationTime = Math.round((Date.now() - startTime) / 1000);
         await project.save();
 
-        await User.findByIdAndUpdate(userId, { $inc: { credits: -1 } });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { credits: -1 },
+        });
 
         console.log("✅ Project completed:", project._id);
       } catch (err: any) {
@@ -533,10 +100,15 @@ export const createProject = asyncHandler(
         console.error("❌ Error stack:", err?.stack);
 
         if (err?.status === 429 || err?.code === "rate_limit_exceeded") {
-          console.error("❌ Cause: Groq rate limit exceeded");
+          console.error("❌ Cause: AI Engine rate limit exceeded");
         }
+
         if (err?.message?.includes("HF") || err?.message?.includes("FLUX")) {
           console.error("❌ Cause: Hugging Face / FLUX error");
+        }
+
+        if (err?.code === "ECONNREFUSED" || err?.message?.includes("ECONNREFUSED")) {
+          console.error("❌ Cause: ai-engine (Python) service غير شغال أو URL غلط - تأكد إن uvicorn شغال وإن AI_ENGINE_URL مظبوط");
         }
 
         project.status = "failed";
@@ -550,6 +122,7 @@ export const createProject = asyncHandler(
     res.status(201).json({
       message: "تم بدء عملية توليد البراند بنجاح",
       projectId: project._id,
+      remainingAttempts: 2 - (projectsToday + 1),
     });
   },
 );
@@ -654,15 +227,13 @@ export const getProjectResult = asyncHandler(
     const needsAgeSegments =
       !("ageSegments" in result) ||
       Object.keys((result as any).ageSegments || {}).length === 0;
-    const needsBusinessOverview = // ← جديد
+    const needsBusinessOverview =
       !result.businessOverview ||
       Object.keys(result.businessOverview || {}).length === 0;
-    const needsAgePreferences =  // ← جديد
+    const needsAgePreferences =
       !result.agePreferences ||
       Object.keys(result.agePreferences || {}).length === 0;
-    const needsFaq =             // ← جديد
-      !result.faq ||
-      Object.keys(result.faq || {}).length === 0;
+    const needsFaq = !result.faq || Object.keys(result.faq || {}).length === 0;
 
     if (
       needsCompetitors ||
@@ -672,9 +243,9 @@ export const getProjectResult = asyncHandler(
       needsLaunchPlan ||
       needsSwot ||
       needsAgeSegments ||
-      needsBusinessOverview || // ← جديد
-      needsAgePreferences    || // ← جديد
-      needsFaq                  // ← جديد
+      needsBusinessOverview ||
+      needsAgePreferences ||
+      needsFaq
     ) {
       try {
         const updates: Record<string, any> = {};
@@ -686,10 +257,10 @@ export const getProjectResult = asyncHandler(
           generateLaunchPlanOnly,
           generateSwotOnly,
           generateAgeSegmentsOnly,
-          generateBusinessOverviewOnly, // ← جديد
-          generateAgePreferencesOnly,   // ← جديد
-          generateFaqOnly,              // ← جديد
-        } = await import("./ai.service");
+          generateBusinessOverviewOnly,
+          generateAgePreferencesOnly,
+          generateFaqOnly,
+        } = await import("../../Ai/ai.service");
 
         const brandCtx = {
           idea: project.idea,
@@ -697,12 +268,12 @@ export const getProjectResult = asyncHandler(
             project.customBrandName ||
             result.brandIdentity?.recommendedName ||
             "",
-          audience:    result.brandIdentity?.strategy?.audience    || "",
+          audience: result.brandIdentity?.strategy?.audience || "",
           positioning: result.brandIdentity?.strategy?.positioning || "",
-          value:       result.brandIdentity?.strategy?.value       || "",
-          tagline:     result.brandIdentity?.tagline?.ar           || "",
-          messages:    result.brandIdentity?.messages              || [],
-          style:       project.selectedStyle,
+          value: result.brandIdentity?.strategy?.value || "",
+          tagline: result.brandIdentity?.tagline?.ar || "",
+          messages: result.brandIdentity?.messages || [],
+          style: project.selectedStyle,
         };
 
         const backfillTasks = await Promise.allSettled([
@@ -739,20 +310,18 @@ export const getProjectResult = asyncHandler(
                 (r) => r && (updates.ageSegments = r),
               )
             : Promise.resolve(),
-          needsBusinessOverview // ← جديد
+          needsBusinessOverview
             ? generateBusinessOverviewOnly(brandCtx).then(
                 (r) => r && (updates.businessOverview = r),
               )
             : Promise.resolve(),
-          needsAgePreferences   // ← جديد
+          needsAgePreferences
             ? generateAgePreferencesOnly(brandCtx).then(
                 (r) => r && (updates.agePreferences = r),
               )
             : Promise.resolve(),
-          needsFaq              // ← جديد
-            ? generateFaqOnly(brandCtx).then(
-                (r) => r && (updates.faq = r),
-              )
+          needsFaq
+            ? generateFaqOnly(brandCtx).then((r) => r && (updates.faq = r))
             : Promise.resolve(),
         ]);
 
@@ -799,26 +368,26 @@ export const generateExtraSocial = asyncHandler(
       return;
     }
 
-    const { generateExtraSocialContent } = await import("./ai.service");
+    const { generateExtraSocialContent } = await import("../../Ai/ai.service");
 
     const extra = await generateExtraSocialContent({
       idea: project.idea,
       brandName:
         project.customBrandName || result.brandIdentity?.recommendedName || "",
-      style:    project.selectedStyle,
-      tagline:  result.brandIdentity?.tagline?.ar  || "",
+      style: project.selectedStyle,
+      tagline: result.brandIdentity?.tagline?.ar || "",
       audience: result.brandIdentity?.strategy?.audience || "",
-      value:    result.brandIdentity?.strategy?.value    || "",
+      value: result.brandIdentity?.strategy?.value || "",
     });
 
     const cur = result.socialMedia || {};
     const updated = {
       ...cur,
       contentMap: cur.contentMap || [],
-      postIdeas:  [...(cur.postIdeas  || []), ...(extra.postIdeas  || [])],
+      postIdeas: [...(cur.postIdeas || []), ...(extra.postIdeas || [])],
       videoIdeas: [...(cur.videoIdeas || []), ...(extra.videoIdeas || [])],
-      instagram:  [...(cur.instagram  || []), ...(extra.instagram  || [])],
-      twitter:    [...(cur.twitter    || []), ...(extra.twitter    || [])],
+      instagram: [...(cur.instagram || []), ...(extra.instagram || [])],
+      twitter: [...(cur.twitter || []), ...(extra.twitter || [])],
     };
 
     await Result.findByIdAndUpdate(result._id, { socialMedia: updated });
@@ -846,9 +415,9 @@ export const regenerateSection = asyncHandler(
       "competitors",
       "brochureContent",
       "ageSegments",
-      "businessOverview", // ← جديد
-      "agePreferences",   // ← جديد
-      "faq",              // ← جديد
+      "businessOverview",
+      "agePreferences",
+      "faq",
     ];
     if (!allowedSections.includes(section)) {
       res.status(400).json({ message: "قسم غير مدعوم للإعادة" });
@@ -875,21 +444,21 @@ export const regenerateSection = asyncHandler(
       generateCompetitorsOnly,
       generateBrochureOnly,
       generateAgeSegmentsOnly,
-      generateBusinessOverviewOnly, // ← جديد
-      generateAgePreferencesOnly,   // ← جديد
-      generateFaqOnly,              // ← جديد
-    } = await import("./ai.service");
+      generateBusinessOverviewOnly,
+      generateAgePreferencesOnly,
+      generateFaqOnly,
+    } = await import("../../Ai/ai.service");
 
     const brandCtx = {
       idea: project.idea,
       brandName:
         project.customBrandName || result.brandIdentity?.recommendedName || "",
-      audience:    result.brandIdentity?.strategy?.audience    || "",
+      audience: result.brandIdentity?.strategy?.audience || "",
       positioning: result.brandIdentity?.strategy?.positioning || "",
-      value:       result.brandIdentity?.strategy?.value       || "",
-      tagline:     result.brandIdentity?.tagline?.ar           || "",
-      messages:    result.brandIdentity?.messages              || [],
-      style:       project.selectedStyle,
+      value: result.brandIdentity?.strategy?.value || "",
+      tagline: result.brandIdentity?.tagline?.ar || "",
+      messages: result.brandIdentity?.messages || [],
+      style: project.selectedStyle,
     };
 
     let newData: any = null;
@@ -916,13 +485,13 @@ export const regenerateSection = asyncHandler(
       case "ageSegments":
         newData = await generateAgeSegmentsOnly(brandCtx);
         break;
-      case "businessOverview": // ← جديد
+      case "businessOverview":
         newData = await generateBusinessOverviewOnly(brandCtx);
         break;
-      case "agePreferences":   // ← جديد
+      case "agePreferences":
         newData = await generateAgePreferencesOnly(brandCtx);
         break;
-      case "faq":              // ← جديد
+      case "faq":
         newData = await generateFaqOnly(brandCtx);
         break;
     }
@@ -941,227 +510,10 @@ export const regenerateSection = asyncHandler(
   },
 );
 
-export const CountProject = asyncHandler(async (req: Request, res: Response) => {
-  // بيعد الكل مش بس للـ user ده
-  const count = await Project.countDocuments({ status: "completed" });
-  res.status(200).json({ count });
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export const CountProject = asyncHandler(
+  async (req: Request, res: Response) => {
+    // بيعد الكل مش بس للـ user ده
+    const count = await Project.countDocuments({ status: "completed" });
+    res.status(200).json({ count });
+  },
+);

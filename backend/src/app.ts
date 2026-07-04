@@ -2,6 +2,11 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import hpp from "hpp";
+import helmet from "helmet";
+import morgan from "morgan";
+
+import { notFound, errorHandler } from "./middlewares/error";
 
 import { sessionMiddleware } from "./config/Session";
 import passport from "./modules/auth/strategies/google.strategy";
@@ -15,15 +20,18 @@ app.set("trust proxy", 1);
 app.use(
   cors({
     origin: [
-         "http://localhost:5173",
+      "http://localhost:5173",
       "https://arab-brand.vercel.app",
-      "https://arab-brand-git-master-omar113650s-projects.vercel.app/",
-      "https://arab-brand.vercel.app/"
+      "https://arab-brand-git-master-omar113650s-projects.vercel.app",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-gemini-api-key"],
-  }),
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-gemini-api-key",
+    ],
+  })
 );
 
 // app.use(
@@ -31,8 +39,12 @@ app.use(
 //     windowMs: 15 * 60 * 1000,
 //     max: 200,
 //     message: "Too many requests from this IP, please try again later.",
-//   }),
+//   })
 // );
+
+app.use(helmet());
+app.use(hpp());
+app.use(morgan("dev"));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -61,31 +73,10 @@ app.use((req, res) => {
   });
 });
 
-app.use((err: any, req: any, res: any, next: any) => {
-  console.error("Unhandled Error:", err);
-
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || "حدث خطأ غير متوقع في الخادم",
-  });
-});
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

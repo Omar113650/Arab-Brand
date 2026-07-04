@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target:'https://arab-brand-4qj7.vercel.app',
         changeOrigin: true,
       }
     }

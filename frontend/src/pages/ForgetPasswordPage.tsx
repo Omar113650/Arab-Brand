@@ -1,21 +1,23 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import ParticleBackground from "../components/ParticleBackground";
+import { useTranslation } from "react-i18next";
 
 type Step = "email" | "sent";
 
 export default function ForgetPasswordPage() {
+    const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [step, setStep] = useState<Step>("email");
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return setErr("يرجاء إدخال البريد الإلكتروني");
+    if (!email) return setErr(t("txt_291"));
     setLoading(true);
     setErr("");
     try {;
-      console.log("📤 بيبعت request على:", "/api/auth/forget-password");
+      console.log(t("txt_290"), "/api/auth/forget-password");
 
       const res = await fetch("/api/auth/forget-password", {
         method: "POST",
@@ -25,11 +27,11 @@ export default function ForgetPasswordPage() {
       console.log("📥 Response status:", res.status);
       const data = await res.json();
       console.log("📦 Response data:", data);
-      if (!res.ok) return setErr(data.message || "حدث خطأ، حاول مرة أخرى");
+      if (!res.ok) return setErr(data.message || t("txt_289"));
       setStep("sent");
     } catch (error) {
       console.error("❌ Error:", error);
-      setErr("خطأ في الاتصال، حاول مرة أخرى");
+      setErr(t("txt_288"));
     } finally {
       setLoading(false);
     }
@@ -162,8 +164,8 @@ export default function ForgetPasswordPage() {
                   marginBottom: ".375rem",
                 }}
               >
-                نسيت كلمة المرور؟
-              </h1>
+                {t("txt_286")}
+                                            </h1>
               <p
                 style={{
                   fontSize: ".82rem",
@@ -172,8 +174,8 @@ export default function ForgetPasswordPage() {
                   lineHeight: 1.6,
                 }}
               >
-                أدخل إيميلك وهنبعتلك رابط لإعادة تعيين كلمة المرور
-              </p>
+                {t("txt_285")}
+                                            </p>
 
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: "1.5rem" }}>
@@ -188,8 +190,8 @@ export default function ForgetPasswordPage() {
                       marginBottom: ".5rem",
                     }}
                   >
-                    البريد الإلكتروني
-                  </label>
+                    {t("txt_284")}
+                                                        </label>
                   <input
                     type="email"
                     value={email}
@@ -266,10 +268,10 @@ export default function ForgetPasswordPage() {
                           animation: "spin 1s linear infinite",
                         }}
                       />
-                      جاري الإرسال...
-                    </>
+                      {t("txt_283")}
+                                                              </>
                   ) : (
-                    "إرسال رابط الاستعادة ←"
+                    t("txt_287")
                   )}
                 </button>
               </form>
@@ -315,8 +317,8 @@ export default function ForgetPasswordPage() {
                   marginBottom: ".5rem",
                 }}
               >
-                تم الإرسال ✅
-              </h2>
+                {t("txt_282")}
+                                                </h2>
               <p
                 style={{
                   fontSize: ".85rem",
@@ -325,14 +327,14 @@ export default function ForgetPasswordPage() {
                   marginBottom: "1.75rem",
                 }}
               >
-                بعتنالك رابط إعادة التعيين على
-                <br />
+                {t("txt_281")}
+                                                  <br />
                 <span style={{ color: "#C9973A", fontWeight: 600 }}>
                   {email}
                 </span>
                 <br />
-                افتح الإيميل واضغط على الرابط
-              </p>
+                {t("txt_280")}
+                                                </p>
 
               <button
                 onClick={() => setStep("email")}
@@ -356,8 +358,8 @@ export default function ForgetPasswordPage() {
                   e.currentTarget.style.color = "#8A8498";
                 }}
               >
-                إرسال مرة أخرى
-              </button>
+                {t("txt_279")}
+                                                </button>
             </div>
           )}
 
@@ -381,8 +383,8 @@ export default function ForgetPasswordPage() {
                 gap: ".3rem",
               }}
             >
-              ← رجوع لتسجيل الدخول
-            </Link>
+              {t("txt_278")}
+                                      </Link>
           </p>
         </div>
       </div>

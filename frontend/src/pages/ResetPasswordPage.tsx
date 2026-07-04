@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ParticleBackground from "../components/ParticleBackground";
+import { useTranslation } from "react-i18next";
 
 export default function ResetPasswordPage() {
+    const { t } = useTranslation();
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -10,13 +12,12 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const navigate = useNavigate();
   const { userId, token } = useParams();
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPassword || !confirm) return setErr("يرجاء ملء جميع الحقول");
-    if (newPassword.length < 6) return setErr("كلمة المرور لازم تكون 6 أحرف على الأقل");
-    if (newPassword !== confirm) return setErr("كلمتا المرور مش متطابقتين");
+    if (!newPassword || !confirm) return setErr(t("txt_588"));
+    if (newPassword.length < 6) return setErr(t("txt_587"));
+    if (newPassword !== confirm) return setErr(t("txt_586"));
     setLoading(true);
     setErr("");
     try {
@@ -26,11 +27,11 @@ export default function ResetPasswordPage() {
         body: JSON.stringify({ userId, resetPasswordToken: token, newPassword }),
       });
       const data = await res.json();
-      if (!res.ok) return setErr(data.message || "حدث خطأ");
+      if (!res.ok) return setErr(data.message || t("txt_585"));
       setDone(true);
       setTimeout(() => navigate("/login"), 3000);
     } catch {
-      setErr("خطأ في الاتصال، حاول مرة أخرى");
+      setErr(t("txt_584"));
     } finally {
       setLoading(false);
     }
@@ -89,17 +90,17 @@ export default function ResetPasswordPage() {
               </div>
 
               <h1 style={{ fontFamily: "Sora,sans-serif", fontSize: "1.5rem", fontWeight: 700, color: "#F0EDE6", marginBottom: ".375rem" }}>
-                كلمة مرور جديدة
-              </h1>
+                {t("txt_582")}
+                                            </h1>
               <p style={{ fontSize: ".82rem", color: "#8A8498", marginBottom: "1.75rem", lineHeight: 1.6 }}>
-                اختار كلمة مرور قوية لحسابك
-              </p>
+                {t("txt_581")}
+                                            </p>
 
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: "1rem" }}>
                   <label style={{ display: "block", fontSize: ".75rem", fontWeight: 700, color: "#6B6478", letterSpacing: "1px", textTransform: "uppercase", marginBottom: ".5rem" }}>
-                    كلمة المرور الجديدة
-                  </label>
+                    {t("txt_580")}
+                                                        </label>
                   <input
                     type="password"
                     value={newPassword}
@@ -113,8 +114,8 @@ export default function ResetPasswordPage() {
 
                 <div style={{ marginBottom: "1.5rem" }}>
                   <label style={{ display: "block", fontSize: ".75rem", fontWeight: 700, color: "#6B6478", letterSpacing: "1px", textTransform: "uppercase", marginBottom: ".5rem" }}>
-                    تأكيد كلمة المرور
-                  </label>
+                    {t("txt_579")}
+                                                        </label>
                   <input
                     type="password"
                     value={confirm}
@@ -138,8 +139,8 @@ export default function ResetPasswordPage() {
                   style={{ width: "100%", padding: "1rem", background: loading ? "#8A6A28" : "#C9973A", color: "#08080F", border: "none", borderRadius: 12, fontFamily: "Tajawal,sans-serif", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", boxShadow: "0 6px 24px #C9973A28", transition: "all .2s", display: "flex", alignItems: "center", justifyContent: "center", gap: ".5rem" }}
                 >
                   {loading ? (
-                    <><div style={{ width: 16, height: 16, border: "2px solid #08080F44", borderTop: "2px solid #08080F", borderRadius: "50%", animation: "spin 1s linear infinite" }} />جاري التغيير...</>
-                  ) : "تغيير كلمة المرور ←"}
+                    <><div style={{ width: 16, height: 16, border: "2px solid #08080F44", borderTop: "2px solid #08080F", borderRadius: "50%", animation: "spin 1s linear infinite" }} />{t("txt_578")}</>
+                  ) : t("txt_583")}
                 </button>
               </form>
             </>
@@ -152,20 +153,20 @@ export default function ResetPasswordPage() {
                 </svg>
               </div>
               <h2 style={{ fontFamily: "Sora,sans-serif", fontSize: "1.4rem", fontWeight: 700, color: "#F0EDE6", marginBottom: ".5rem" }}>
-                تم التغيير ✅
-              </h2>
+                {t("txt_577")}
+                                                </h2>
               <p style={{ fontSize: ".85rem", color: "#8A8498", lineHeight: 1.7 }}>
-                تم تغيير كلمة المرور بنجاح
-                <br />
-                هيتم تحويلك لصفحة الدخول...
-              </p>
+                {t("txt_576")}
+                                                  <br />
+                {t("txt_575")}
+                                                </p>
             </div>
           )}
 
           <p style={{ textAlign: "center", fontSize: ".82rem", color: "#3A3650", marginTop: "1.5rem" }}>
             <Link to="/login" style={{ color: "#C9973A", textDecoration: "none", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: ".3rem" }}>
-              ← رجوع لتسجيل الدخول
-            </Link>
+              {t("txt_574")}
+                                      </Link>
           </p>
         </div>
       </div>
