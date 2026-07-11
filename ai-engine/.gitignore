@@ -1,7 +1,4 @@
 .env
-env/
-
-.env
-*.env
+**/.env
 ai-engine/.env
 backend/.env

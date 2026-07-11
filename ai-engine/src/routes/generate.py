@@ -71,7 +71,6 @@ async def generate_launch_plan(req: BrandCtxRequest):
         or {}
     )
 
-
 @router.post("/generate/swot")
 async def generate_swot(req: BrandCtxRequest):
     return await ss.generate_swot_only(req.idea, req.brandName, req.audience, req.value, req.positioning) or {}
@@ -86,7 +85,6 @@ async def generate_age_segments(req: BrandCtxRequest):
         or {}
     )
 
-
 @router.post("/generate/business-overview")
 async def generate_business_overview(req: BrandCtxRequest):
     return (
@@ -96,7 +94,6 @@ async def generate_business_overview(req: BrandCtxRequest):
         or {}
     )
 
-
 @router.post("/generate/age-preferences")
 async def generate_age_preferences(req: BrandCtxRequest):
     return (
@@ -105,7 +102,6 @@ async def generate_age_preferences(req: BrandCtxRequest):
         )
         or {}
     )
-
 
 @router.post("/generate/faq")
 async def generate_faq(req: BrandCtxRequest):

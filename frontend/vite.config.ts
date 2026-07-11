@@ -6,9 +6,14 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target:'https://arab-brand-4qj7.vercel.app',
+        target: 'http://localhost:9000',
         changeOrigin: true,
       }
     }
   }
 })
+
+
+
+
+// https://arab-brand-4qj7.vercel.app
