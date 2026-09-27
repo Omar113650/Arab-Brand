@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { fetch } from "../lib/api";
 
 /* ─────────────────────────────────────────────
    TYPES

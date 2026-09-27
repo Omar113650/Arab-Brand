@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
+import { fetch } from "../lib/api";
 
 /* ─────────────────────────────────────────────
    TYPES

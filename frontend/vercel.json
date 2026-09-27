@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://arab-brand-4qj7.vercel.app/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://arab-brand-4qj7.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",

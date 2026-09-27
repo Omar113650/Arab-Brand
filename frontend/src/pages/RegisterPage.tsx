@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { fetch, getApiUrl } from "../lib/api";
 
 export default function RegisterPage() {
     const { t } = useTranslation();
@@ -445,7 +446,7 @@ export default function RegisterPage() {
 
         {/* GOOGLE REGISTER */}
         <a
-          href="/api/auth/google"
+          href={getApiUrl("/api/auth/google")}
           className="google-btn"
           style={{
             display: "flex",

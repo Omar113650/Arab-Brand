@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import ParticleBackground from "../components/ParticleBackground";
 import { useTranslation } from "react-i18next";
+import { fetch } from "../lib/api";
 
 type Step = "email" | "sent";
 

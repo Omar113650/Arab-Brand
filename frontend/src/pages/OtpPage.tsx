@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ParticleBackground from "../components/ParticleBackground";
 import { useTranslation } from "react-i18next";
+import { fetch } from "../lib/api";
 
 export default function OtpPage() {
     const { t } = useTranslation();

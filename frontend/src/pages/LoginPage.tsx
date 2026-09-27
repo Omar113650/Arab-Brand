@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { fetch, getApiUrl } from "../lib/api";
 
 export default function LoginPage() {
     const { t } = useTranslation();
@@ -322,7 +323,7 @@ export default function LoginPage() {
                           </p>
 
         <a
-          href="/api/auth/google"
+          href={getApiUrl("/api/auth/google")}
           className="google-btn"
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,

@@ -1,7 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import ParticleBackground from "../components/ParticleBackground";
-// import { fetch } from "../lib/api";
+import { fetch } from "../lib/api";
 
 const STYLES = [
   { id: "modern", ar: "عصري", en: "Modern" },
