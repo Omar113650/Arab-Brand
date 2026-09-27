@@ -62,7 +62,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", router);
+app.use("/api/v1/auth", router);
 app.use("/api/projects", projectRoutes);
+app.use("/api/v1/projects", projectRoutes);
 
 app.use((req, res, next) => {
   console.log("==>", req.method, req.originalUrl);
