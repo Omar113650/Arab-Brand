@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/v1/:path*",
+      "destination": "https://arab-brand-4qj7.vercel.app/api/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://arab-brand-4qj7.vercel.app/api/:path*"
     },
