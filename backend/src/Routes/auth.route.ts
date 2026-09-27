@@ -40,7 +40,7 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:5173/login",
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
     session: true,
   }),
   (req: any, res) => {
@@ -52,10 +52,10 @@ router.get(
     req.session.save((err: any) => {
       if (err) {
         console.error(err);
-        return res.redirect("http://localhost:5173/login");
+        return res.redirect(`${process.env.FRONTEND_URL}/login`);
       }
 
-      return res.redirect("http://localhost:5173/dashboard");
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
     });
   }
 );
